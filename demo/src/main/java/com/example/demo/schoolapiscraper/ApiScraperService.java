@@ -15,7 +15,7 @@ import java.util.Date;
 
 @Service
 public class ApiScraperService {
-    class TokenRequestBody {
+    static class TokenRequestBody {
         String username;
         String password;
         String grant_type = "password";
@@ -25,7 +25,7 @@ public class ApiScraperService {
             this.password = password;
         }
     }
-    class ApiKeyResponse {
+    static class ApiKeyResponse {
         @JsonProperty("access_token")
         String accessToken;
         @JsonProperty("expires_in")
@@ -42,7 +42,8 @@ public class ApiScraperService {
         String sessionState;
         String scope;
 
-        public ApiKeyResponse(String accessToken, int expiresIn, int refreshExpiresIn, String refreshToken, String tokenType, String notBeforePolicy, String sessionState, String scope) {
+
+        ApiKeyResponse(String accessToken, int expiresIn, int refreshExpiresIn, String refreshToken, String tokenType, String notBeforePolicy, String sessionState, String scope) {
             this.accessToken = accessToken;
             this.expiresIn = expiresIn;
             this.refreshExpiresIn = refreshExpiresIn;
@@ -53,6 +54,38 @@ public class ApiScraperService {
             this.scope = scope;
         }
     }
+
+    static class PeerResponse {
+        static class Campus {
+            String id;
+            String shortName;
+
+            public Campus(String id, String shortName) {
+                this.id = id;
+                this.shortName = shortName;
+            }
+        }
+        String login;
+        String className;
+        String parallelName;
+        int expValue;
+        int level;
+        int expToNextLevel;
+        Campus campus;
+        String status;
+
+        public PeerResponse(String login, String className, String parallelName, int expValue, int level, int expToNextLevel, Campus campus, String status) {
+            this.login = login;
+            this.className = className;
+            this.parallelName = parallelName;
+            this.expValue = expValue;
+            this.level = level;
+            this.expToNextLevel = expToNextLevel;
+            this.campus = campus;
+            this.status = status;
+        }
+    }
+
     private final String tokenUrl = "";
     private final String apiUrl = "";
     private TokenRequestBody trb;
@@ -101,10 +134,14 @@ public class ApiScraperService {
                     .build();
             PeerResponse
             for (Peer p : repo.getAllPeers()) {
-                apiReqClient.get()
-                        .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
-                        .retrieve()
-                        .body()
+                while (!success) {
+                    apiReqClient.get()
+                            .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
+                            .retrieve()
+                            .body()
+
+                }
+
             }
         }
     }
