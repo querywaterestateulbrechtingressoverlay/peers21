@@ -3,15 +3,22 @@ package com.example.demo.schoolapiscraper;
 import com.example.demo.data.Peer;
 import com.example.demo.data.PeerRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 @Service
 public class ApiScraperService {
@@ -92,24 +99,36 @@ public class ApiScraperService {
     private String apiKey = "";
     private long lastUpdateDate = System.currentTimeMillis();
     private long keyExpiryDate = System.currentTimeMillis();
+    Logger logger = LoggerFactory.getLogger(ApiScraperService.class);
     @Autowired
     PeerRepository repo;
     ApiScraperService() {
+        boolean error = false;
+        logger.info("retrieving API username from environment variables...");
         String apiUsername = System.getenv("API_USERNAME");
-        String apiPassword = System.getenv("API_PASSWORD");
         if (apiUsername.isEmpty()) {
-            throw new RuntimeException("System variable API_USERNAME is not set");
+            logger.error("System variable API_USERNAME is not set");
+            error = true;
         }
+        logger.info("retrieving API password from environment variables...");
+        String apiPassword = System.getenv("API_PASSWORD");
         if (apiPassword.isEmpty()) {
-            throw new RuntimeException("System variable API_PASSWORD is not set");
+            logger.error("System variable API_USERNAME is not set");
+            error = true;
         }
-        trb = new TokenRequestBody(apiUsername, apiPassword);
+        if (error) {
+            throw new RuntimeException("an error happened during the retrieval of system variables");
+        } else {
+            trb = new TokenRequestBody(apiUsername, apiPassword);
+            logger.info("successfully obtained API username and password");
+        }
     }
     @Bean
     public ApiScraperService apiScraper() {
         return new ApiScraperService();
     }
     public void updateApiKey() {
+        logger.info("updating API key...");
         RestClient apiReqClient = RestClient.builder()
                 .defaultHeader("Content-Type", "application/x-www-form-urlencoded")
                 .build();
@@ -117,32 +136,43 @@ public class ApiScraperService {
                 .uri(tokenUrl)
                 .body(trb)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> logger.error("couldn't update API key, request = " + request + ", response = " + response)))
                 .body(ApiKeyResponse.class);
         if (keyEntity != null) {
             apiKey = keyEntity.accessToken;
             keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn * 1000L;
+            logger.info("successfully updated API key, new key expiry date = " + LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
         } else {
             apiKey = "";
         }
     }
 
     @Scheduled(fixedRateString = "PT15M")
-    void updatePeerList() {
+    boolean updatePeerList() {
+        logger.info("updating peer info...");
+        if (System.currentTimeMillis() <= keyExpiryDate) {
+            logger.info("API key is out of date, updating...");
+            updateApiKey();
+        }
+        logger.info("starting peer list update...");
         if (!apiKey.isEmpty()) {
             RestClient apiReqClient = RestClient.builder()
                     .baseUrl(apiUrl)
                     .build();
-            PeerResponse
-            for (Peer p : repo.getAllPeers()) {
-                while (!success) {
-                    apiReqClient.get()
-                            .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
-                            .retrieve()
-                            .body()
+            List<Peer> peerList = repo.getAllPeers();
+            for (Peer p : peerList) {
+                boolean success = true;
+                apiReqClient.get()
+                        .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
+                        .retrieve()
+                        .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
 
-                }
+                        })
+                        .body()
 
             }
+        } else {
+            logger.warn("no API key found, update stopped");
         }
     }
     public Date getLastUpdateDate() {
