@@ -1,15 +1,14 @@
-package com.example.demo.schoolapiscraper;
+package com.example.demo.scraper;
 
 import com.example.demo.data.Peer;
 import com.example.demo.data.PeerRepository;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.example.demo.scraper.dto.ApiKeyResponse;
+import com.example.demo.scraper.dto.TokenRequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -22,82 +21,12 @@ import java.util.TimeZone;
 
 @Service
 public class ApiScraperService {
-    static class TokenRequestBody {
-        String username;
-        String password;
-        String grant_type = "password";
-        String client_id = "s21-open-api";
-        TokenRequestBody(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-    }
-    static class ApiKeyResponse {
-        @JsonProperty("access_token")
-        String accessToken;
-        @JsonProperty("expires_in")
-        int expiresIn;
-        @JsonProperty("refresh_expires_in")
-        int refreshExpiresIn;
-        @JsonProperty("refresh_token")
-        String refreshToken;
-        @JsonProperty("token_type")
-        String tokenType;
-        @JsonProperty("not-before-policy")
-        String notBeforePolicy;
-        @JsonProperty("session_state")
-        String sessionState;
-        String scope;
-
-
-        ApiKeyResponse(String accessToken, int expiresIn, int refreshExpiresIn, String refreshToken, String tokenType, String notBeforePolicy, String sessionState, String scope) {
-            this.accessToken = accessToken;
-            this.expiresIn = expiresIn;
-            this.refreshExpiresIn = refreshExpiresIn;
-            this.refreshToken = refreshToken;
-            this.tokenType = tokenType;
-            this.notBeforePolicy = notBeforePolicy;
-            this.sessionState = sessionState;
-            this.scope = scope;
-        }
-    }
-
-    static class PeerResponse {
-        static class Campus {
-            String id;
-            String shortName;
-
-            public Campus(String id, String shortName) {
-                this.id = id;
-                this.shortName = shortName;
-            }
-        }
-        String login;
-        String className;
-        String parallelName;
-        int expValue;
-        int level;
-        int expToNextLevel;
-        Campus campus;
-        String status;
-
-        public PeerResponse(String login, String className, String parallelName, int expValue, int level, int expToNextLevel, Campus campus, String status) {
-            this.login = login;
-            this.className = className;
-            this.parallelName = parallelName;
-            this.expValue = expValue;
-            this.level = level;
-            this.expToNextLevel = expToNextLevel;
-            this.campus = campus;
-            this.status = status;
-        }
-    }
 
     private final String tokenUrl = "";
     private final String apiUrl = "";
-    private TokenRequestBody trb;
+    private final TokenRequestBody trb;
     private String apiKey = "";
-    private long lastUpdateDate = System.currentTimeMillis();
+    private final long lastUpdateDate = System.currentTimeMillis();
     private long keyExpiryDate = System.currentTimeMillis();
     Logger logger = LoggerFactory.getLogger(ApiScraperService.class);
     @Autowired
@@ -139,8 +68,8 @@ public class ApiScraperService {
                 .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> logger.error("couldn't update API key, request = " + request + ", response = " + response)))
                 .body(ApiKeyResponse.class);
         if (keyEntity != null) {
-            apiKey = keyEntity.accessToken;
-            keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn * 1000L;
+            apiKey = keyEntity.accessToken();
+            keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
             logger.info("successfully updated API key, new key expiry date = " + LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
         } else {
             apiKey = "";
@@ -161,12 +90,12 @@ public class ApiScraperService {
                     .build();
             List<Peer> peerList = repo.getAllPeers();
             for (Peer p : peerList) {
-                boolean success = true;
+                final boolean[] tooManyRequests = {false};
                 apiReqClient.get()
                         .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
                         .retrieve()
                         .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
-
+                            tooManyRequests[0] = true;
                         })
                         .body()
 
