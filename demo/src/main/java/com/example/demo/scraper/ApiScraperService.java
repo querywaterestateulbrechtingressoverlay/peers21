@@ -3,11 +3,13 @@ package com.example.demo.scraper;
 import com.example.demo.data.Peer;
 import com.example.demo.data.PeerRepository;
 import com.example.demo.scraper.dto.ApiKeyResponse;
+import com.example.demo.scraper.dto.PeerResponse;
 import com.example.demo.scraper.dto.TokenRequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,10 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.Timer;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Service
 public class ApiScraperService {
@@ -76,6 +82,8 @@ public class ApiScraperService {
         }
     }
 
+
+
     @Scheduled(fixedRateString = "PT15M")
     boolean updatePeerList() {
         logger.info("updating peer info...");
@@ -89,16 +97,37 @@ public class ApiScraperService {
                     .baseUrl(apiUrl)
                     .build();
             List<Peer> peerList = repo.getAllPeers();
+            try (ScheduledExecutorService requestExecutor = Executors.newSingleThreadScheduledExecutor()) {
+                for (Peer p : peerList) {
+                    final boolean[] tooManyRequests = {false};
+                    Callable<PeerResponse> cpr = () -> {
+                        PeerResponse pr = apiReqClient.get()
+                                .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
+                                .retrieve()
+                                .onStatus((hsc) -> hsc == HttpStatus.TOO_MANY_REQUESTS, (req, resp) -> tooManyRequests[0] = true)
+                                .
+                                .body(PeerResponse.class);
+                        return pr;
+                    };
+                    requestExecutor.schedule(cpr, 1,)
+                }
+
+
+            }
             for (Peer p : peerList) {
-                final boolean[] tooManyRequests = {false};
-                apiReqClient.get()
+
+                PeerResponse pr = apiReqClient.get()
                         .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
                         .retrieve()
-                        .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
-                            tooManyRequests[0] = true;
-                        })
-                        .body()
-
+                        .onStatus((hsc) -> hsc == HttpStatus.TOO_MANY_REQUESTS, (req, resp) -> tooManyRequests[0] = true)
+                        .body(PeerResponse.class);
+                while (tooManyRequests[0]) {
+                    Timer t = new Timer();
+                    t.scje
+                }
+                if (pr != null) {
+                    PeerPointsResponce
+                }
             }
         } else {
             logger.warn("no API key found, update stopped");
