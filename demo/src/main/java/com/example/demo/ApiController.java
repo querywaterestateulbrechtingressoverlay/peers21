@@ -4,6 +4,7 @@ import com.example.demo.data.Peer;
 import java.util.List;
 
 import com.example.demo.data.PeerRepository;
+import com.example.demo.scraper.ApiScraperService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,14 @@ public class ApiController {
 
     @Autowired
     PeerRepository repo;
+
+    @Autowired
+    ApiScraperService apiScraper;
+
+    @GetMapping("/")
+    void updateApi() {
+        apiScraper.updateApiKey();
+    }
 
     @GetMapping("/peers")
     List<Peer> getPeers() {
