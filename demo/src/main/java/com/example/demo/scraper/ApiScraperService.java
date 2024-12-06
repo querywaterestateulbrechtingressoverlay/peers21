@@ -84,55 +84,53 @@ public class ApiScraperService {
 
 
 
-    @Scheduled(fixedRateString = "PT15M")
-    boolean updatePeerList() {
-        logger.info("updating peer info...");
-        if (System.currentTimeMillis() <= keyExpiryDate) {
-            logger.info("API key is out of date, updating...");
-            updateApiKey();
-        }
-        logger.info("starting peer list update...");
-        if (!apiKey.isEmpty()) {
-            RestClient apiReqClient = RestClient.builder()
-                    .baseUrl(apiUrl)
-                    .build();
-            List<Peer> peerList = repo.getAllPeers();
-            try (ScheduledExecutorService requestExecutor = Executors.newSingleThreadScheduledExecutor()) {
-                for (Peer p : peerList) {
-                    final boolean[] tooManyRequests = {false};
-                    Callable<PeerResponse> cpr = () -> {
-                        PeerResponse pr = apiReqClient.get()
-                                .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
-                                .retrieve()
-                                .onStatus((hsc) -> hsc == HttpStatus.TOO_MANY_REQUESTS, (req, resp) -> tooManyRequests[0] = true)
-                                .
-                                .body(PeerResponse.class);
-                        return pr;
-                    };
-                    requestExecutor.schedule(cpr, 1,)
-                }
-
-
-            }
-            for (Peer p : peerList) {
-
-                PeerResponse pr = apiReqClient.get()
-                        .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
-                        .retrieve()
-                        .onStatus((hsc) -> hsc == HttpStatus.TOO_MANY_REQUESTS, (req, resp) -> tooManyRequests[0] = true)
-                        .body(PeerResponse.class);
-                while (tooManyRequests[0]) {
-                    Timer t = new Timer();
-                    t.scje
-                }
-                if (pr != null) {
-                    PeerPointsResponce
-                }
-            }
-        } else {
-            logger.warn("no API key found, update stopped");
-        }
-    }
+//    @Scheduled(fixedRateString = "PT15M")
+//    boolean updatePeerList() {
+//        logger.info("updating peer info...");
+//        if (System.currentTimeMillis() <= keyExpiryDate) {
+//            logger.info("API key is out of date, updating...");
+//            updateApiKey();
+//        }
+//        logger.info("starting peer list update...");
+//        if (!apiKey.isEmpty()) {
+//            RestClient apiReqClient = RestClient.builder()
+//                    .baseUrl(apiUrl)
+//                    .build();
+//            List<Peer> peerList = repo.getAllPeers();
+//            try (ScheduledExecutorService requestExecutor = Executors.newSingleThreadScheduledExecutor()) {
+//                for (Peer p : peerList) {
+//                    final boolean[] tooManyRequests = {false};
+//                    Callable<PeerResponse> cpr = () -> {
+//                        PeerResponse pr = apiReqClient.get()
+//                                .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
+//                                .retrieve()
+//                                .onStatus((hsc) -> hsc == HttpStatus.TOO_MANY_REQUESTS, (req, resp) -> tooManyRequests[0] = true)
+//                                .body(PeerResponse.class);
+//                        return pr;
+//                    };
+//                    requestExecutor.schedule(cpr, 1);
+//                }
+//
+//
+//            }
+//            for (Peer p : peerList) {
+//                PeerResponse pr = apiReqClient.get()
+//                        .uri(apiUrl + "/" + p.name() + "@student.21-school.ru")
+//                        .retrieve()
+//                        .onStatus((hsc) -> hsc == HttpStatus.TOO_MANY_REQUESTS, (req, resp) -> tooManyRequests[0] = true)
+//                        .body(PeerResponse.class);
+//                while (tooManyRequests[0]) {
+//                    Timer t = new Timer();
+//
+//                }
+//                if (pr != null) {
+//                    PeerPointsResponce
+//                }
+//            }
+//        } else {
+//            logger.warn("no API key found, update stopped");
+//        }
+//    }
     public Date getLastUpdateDate() {
         return new Date(lastUpdateDate);
     }
