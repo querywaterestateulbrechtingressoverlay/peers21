@@ -41,13 +41,13 @@ public class ApiScraperService {
         boolean error = false;
         logger.info("retrieving API username from environment variables...");
         String apiUsername = System.getenv("API_USERNAME");
-        if (apiUsername.isEmpty()) {
+        if (apiUsername == null) {
             logger.error("System variable API_USERNAME is not set");
             error = true;
         }
         logger.info("retrieving API password from environment variables...");
         String apiPassword = System.getenv("API_PASSWORD");
-        if (apiPassword.isEmpty()) {
+        if (apiPassword == null) {
             logger.error("System variable API_USERNAME is not set");
             error = true;
         }
