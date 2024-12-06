@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api")
 public class ApiController {
 
-    @Autowired
-    PeerRepository repo;
+//    @Autowired
+//    PeerRepository repo;
 
     @Autowired
     ApiScraperService apiScraper;
@@ -24,18 +24,18 @@ public class ApiController {
         apiScraper.updateApiKey();
     }
 
-    @GetMapping("/peers")
-    List<Peer> getPeers() {
-        return repo.getAllPeers();
-    }
-    @GetMapping("/peers/wave/{waveId}")
-    List<Peer> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
-        return repo.findByWave(wave);
-    }
-
-    @GetMapping("/peers/{peerUsername}")
-    Peer getPeerById(@PathVariable @NotBlank String peerUsername) {
-        return repo.findByName(peerUsername);
-    }
+//    @GetMapping("/peers")
+//    List<Peer> getPeers() {
+//        return repo.getAllPeers();
+//    }
+//    @GetMapping("/peers/wave/{waveId}")
+//    List<Peer> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
+//        return repo.findByWave(wave);
+//    }
+//
+//    @GetMapping("/peers/{peerUsername}")
+//    Peer getPeerById(@PathVariable @NotBlank String peerUsername) {
+//        return repo.findByName(peerUsername);
+//    }
 
 }
