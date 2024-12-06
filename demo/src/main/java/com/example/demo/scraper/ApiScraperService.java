@@ -33,7 +33,7 @@ public class ApiScraperService {
 
     private final String tokenUrl = "https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token";
     private final String apiUrl = "https://edu-api.21-school.ru/services/21-school/api/v1";
-    private final MultiValueMap tokenRequestBody = new LinkedMultiValueMap<>();
+    private final LinkedMultiValueMap<String, String> tokenRequestBody = new LinkedMultiValueMap<>();
     private String apiKey = "";
     private final long lastUpdateDate = System.currentTimeMillis();
     private long keyExpiryDate = System.currentTimeMillis();
@@ -57,11 +57,11 @@ public class ApiScraperService {
         if (error) {
             throw new RuntimeException("an error happened during the retrieval of system variables");
         } else {
+            logger.info("successfully obtained API username and password");
             tokenRequestBody.add("username", apiUsername);
             tokenRequestBody.add("password", apiPassword);
             tokenRequestBody.add("grant_type", "password");
             tokenRequestBody.add("client_id", "s21-open-api");
-            logger.info("successfully obtained API username and password");
         }
     }
     @Bean
@@ -84,6 +84,7 @@ public class ApiScraperService {
             apiKey = keyEntity.accessToken();
             keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
             logger.info("successfully updated API key, new key expiry date = " + LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
+            logger.info("key = " + apiKey);
         } else {
             apiKey = "";
         }
