@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
@@ -31,7 +33,7 @@ public class ApiScraperService {
 
     private final String tokenUrl = "https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token";
     private final String apiUrl = "https://edu-api.21-school.ru/services/21-school/api/v1";
-    private final TokenRequestBody trb;
+    private final MultiValueMap tokenRequestBody = new LinkedMultiValueMap<>();
     private String apiKey = "";
     private final long lastUpdateDate = System.currentTimeMillis();
     private long keyExpiryDate = System.currentTimeMillis();
@@ -55,7 +57,10 @@ public class ApiScraperService {
         if (error) {
             throw new RuntimeException("an error happened during the retrieval of system variables");
         } else {
-            trb = new TokenRequestBody(apiUsername, apiPassword);
+            tokenRequestBody.add("username", apiUsername);
+            tokenRequestBody.add("password", apiPassword);
+            tokenRequestBody.add("grant_type", "password");
+            tokenRequestBody.add("client_id", "s21-open-api");
             logger.info("successfully obtained API username and password");
         }
     }
@@ -70,7 +75,7 @@ public class ApiScraperService {
                 .build();
         ApiKeyResponse keyEntity = apiReqClient.post()
                 .uri(tokenUrl)
-                .body(trb)
+                .body(tokenRequestBody)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> logger.error("couldn't update API key, request = " + request + ", response = " + response)))
