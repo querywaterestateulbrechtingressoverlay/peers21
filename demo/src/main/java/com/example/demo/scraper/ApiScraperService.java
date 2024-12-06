@@ -35,8 +35,8 @@ public class ApiScraperService {
     private final long lastUpdateDate = System.currentTimeMillis();
     private long keyExpiryDate = System.currentTimeMillis();
     Logger logger = LoggerFactory.getLogger(ApiScraperService.class);
-    @Autowired
-    PeerRepository repo;
+//    @Autowired
+//    PeerRepository repo;
     ApiScraperService() {
         boolean error = false;
         logger.info("retrieving API username from environment variables...");
