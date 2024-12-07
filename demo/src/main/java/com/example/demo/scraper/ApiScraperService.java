@@ -101,6 +101,7 @@ public class ApiScraperService {
             var changedPeers = new ArrayList<Peer>();
             try (ScheduledExecutorService requestExecutor = Executors.newSingleThreadScheduledExecutor()) {
                 for (Peer p : peerList) {
+                    logger.info("peer " + p.name());
                     Callable<PeerResponse> cpr = () -> apiReqClient.get()
                             .uri(apiUrl + "/participants/" + p.name())
                             .header("Authorization", "Bearer " + apiKey)
@@ -108,7 +109,9 @@ public class ApiScraperService {
                             .body(PeerResponse.class);
                     ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 500, TimeUnit.MILLISECONDS);
                     PeerResponse pr = asd.get();
+                    logger.info("response received");
                     if (p.xp() != pr.expValue()) {
+                        logger.info("values received differ from values in database, updating...");
                         changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), p.peerReviewPoints(), p.codeReviewPoints(), p.coins()));
                     }
                 }
