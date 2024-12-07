@@ -3,12 +3,12 @@ package com.example.demo.scraper;
 import com.example.demo.data.Peer;
 import com.example.demo.data.PeerRepository;
 import com.example.demo.scraper.dto.ApiKeyResponse;
+import com.example.demo.scraper.dto.PeerPointsResponse;
 import com.example.demo.scraper.dto.PeerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +20,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.*;
 
@@ -97,6 +96,7 @@ public class ApiScraperService {
         if (!apiKey.isEmpty()) {
             RestClient apiReqClient = RestClient.builder()
                     .baseUrl(apiUrl)
+                    .defaultHeader("Authorization", "Bearer " + apiKey)
                     .build();
             var peerList = repo.getAllPeers();
             var changedPeers = new ArrayList<Peer>();
@@ -105,15 +105,20 @@ public class ApiScraperService {
                     logger.info("peer " + p.name());
                     Callable<PeerResponse> cpr = () -> apiReqClient.get()
                             .uri(apiUrl + "/participants/" + p.name())
-                            .header("Authorization", "Bearer " + apiKey)
                             .retrieve()
                             .body(PeerResponse.class);
-                    ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 500, TimeUnit.MILLISECONDS);
+                    Callable<PeerPointsResponse> cppr = () -> apiReqClient.get()
+                            .uri(apiUrl + "/participants/" + p.name() + "/points")
+                            .retrieve()
+                            .body(PeerPointsResponse.class);
+                    ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 1000, TimeUnit.MILLISECONDS);
+                    ScheduledFuture<PeerPointsResponse> dsa = requestExecutor.schedule(cppr, 1000, TimeUnit.MILLISECONDS);
                     PeerResponse pr = asd.get();
+                    PeerPointsResponse ppr = dsa.get();
                     logger.info("response received");
-                    if (p.xp() != pr.expValue()) {
+                    if (p.xp() != pr.expValue() || ppr.peerReviewPoints() != p.peerReviewPoints() || ppr.codeReviewPoints() != p.codeReviewPoints() || ppr.coins() != p.coins()) {
                         logger.info("values received differ from values in database, updating...");
-                        changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), p.peerReviewPoints(), p.codeReviewPoints(), p.coins()));
+                        changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins()));
                     }
                 }
             } catch (ExecutionException | InterruptedException e) {
@@ -121,6 +126,7 @@ public class ApiScraperService {
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
+                logger.info("update finished, updated " + changedPeers.size() + " peers");
             }
         } else {
             logger.warn("no API key found, update stopped");
