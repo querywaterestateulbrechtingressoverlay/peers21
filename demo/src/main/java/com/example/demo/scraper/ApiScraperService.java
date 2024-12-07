@@ -102,7 +102,7 @@ public class ApiScraperService {
             try (ScheduledExecutorService requestExecutor = Executors.newSingleThreadScheduledExecutor()) {
                 for (Peer p : peerList) {
                     Callable<PeerResponse> cpr = () -> apiReqClient.get()
-                            .uri(apiUrl + "/" + p.name())
+                            .uri(apiUrl + "/participants/" + p.name())
                             .retrieve()
                             .body(PeerResponse.class);
                     ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 500, TimeUnit.MILLISECONDS);
