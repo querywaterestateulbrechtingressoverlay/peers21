@@ -103,6 +103,7 @@ public class ApiScraperService {
                 for (Peer p : peerList) {
                     Callable<PeerResponse> cpr = () -> apiReqClient.get()
                             .uri(apiUrl + "/participants/" + p.name())
+                            .header("Authorization", "Bearer " + apiKey)
                             .retrieve()
                             .body(PeerResponse.class);
                     ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 500, TimeUnit.MILLISECONDS);
