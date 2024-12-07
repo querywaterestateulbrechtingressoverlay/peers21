@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface PeerRepository extends CrudRepository<Peer, Integer> {
+public interface PeerRepository extends CrudRepository<Peer, String> {
     Peer findByName(String name);
     List<Peer> findByWave(int wave);
     @Query("SELECT * FROM peer_data")
