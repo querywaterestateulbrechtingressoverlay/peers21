@@ -1,5 +1,5 @@
 package com.example.demo.data;
 
 public enum PeerState {
-    ALIVE, FROZEN, BLOCKED
+    ACTIVE, TEMPORARY_BLOCKING, EXPELLED, BLOCKED, FROZEN;
 }

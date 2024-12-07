@@ -2,6 +2,7 @@ package com.example.demo.scraper;
 
 import com.example.demo.data.Peer;
 import com.example.demo.data.PeerRepository;
+import com.example.demo.data.PeerState;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.example.demo.scraper.dto.PeerPointsResponse;
 import com.example.demo.scraper.dto.PeerResponse;
@@ -116,7 +117,7 @@ public class ApiScraperService {
                     PeerResponse pr = asd.get();
                     PeerPointsResponse ppr = dsa.get();
                     logger.info("response received");
-                    if (p.xp() != pr.expValue() || ppr.peerReviewPoints() != p.peerReviewPoints() || ppr.codeReviewPoints() != p.codeReviewPoints() || ppr.coins() != p.coins()) {
+                    if (p.state() != PeerState.valueOf(pr.status()) || p.xp() != pr.expValue() || ppr.peerReviewPoints() != p.peerReviewPoints() || ppr.codeReviewPoints() != p.codeReviewPoints() || ppr.coins() != p.coins()) {
                         logger.info("values received differ from values in database, updating...");
                         changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins()));
                     }
