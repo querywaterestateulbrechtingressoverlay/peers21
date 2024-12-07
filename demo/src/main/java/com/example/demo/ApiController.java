@@ -22,7 +22,7 @@ public class ApiController {
 
     @GetMapping("/")
     void updateApi() {
-        repo.save(new Peer("cypherco", PeerState.ALIVE, 2, 4, 9999, 9999, 9999, 9999));
+        repo.save(new Peer(null, "cypherco", PeerState.ALIVE, 2, 4, 9999, 9999, 9999, 9999));
         apiScraper.updateApiKey();
         apiScraper.updatePeerList();
     }
