@@ -4,6 +4,7 @@ import com.example.demo.data.Peer;
 import java.util.List;
 
 import com.example.demo.data.PeerRepository;
+import com.example.demo.data.PeerState;
 import com.example.demo.scraper.ApiScraperService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,15 +14,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api")
 public class ApiController {
 
-//    @Autowired
-//    PeerRepository repo;
+    @Autowired
+    PeerRepository repo;
 
     @Autowired
     ApiScraperService apiScraper;
 
     @GetMapping("/")
     void updateApi() {
+        repo.save(new Peer("cypherco", PeerState.ALIVE, 2, 4, 9999, 9999, 9999, 9999));
         apiScraper.updateApiKey();
+        apiScraper.updatePeerList();
     }
 
 //    @GetMapping("/peers")
