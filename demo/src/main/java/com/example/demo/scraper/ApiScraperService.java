@@ -78,6 +78,7 @@ public class ApiScraperService {
                 .body(ApiKeyResponse.class);
         if (keyEntity != null) {
             apiKey = keyEntity.accessToken();
+            logger.info("expires_in = " + keyEntity.expiresIn());
             keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
             logger.info("successfully updated API key, new key expiry date = " + LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
             logger.info("key = " + apiKey);
