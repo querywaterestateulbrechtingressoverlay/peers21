@@ -89,7 +89,7 @@ public class ApiScraperService {
     public void updatePeerList() {
         logger.info("updating peer info...");
         if (System.currentTimeMillis() <= keyExpiryDate) {
-            logger.info("API key is out of date, updating...");
+            logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
             updateApiKey();
         }
         logger.info("starting peer list update...");
@@ -115,9 +115,7 @@ public class ApiScraperService {
                         changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), p.peerReviewPoints(), p.codeReviewPoints(), p.coins()));
                     }
                 }
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
+            } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
             if (!changedPeers.isEmpty()) {
