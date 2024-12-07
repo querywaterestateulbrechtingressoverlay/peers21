@@ -6,4 +6,4 @@ import org.springframework.data.relational.core.mapping.Table;
 
 
 @Table("PEER_DATA")
-public record Peer(@Id String name, PeerState state, int wave, int intensive, int xp, @Column("PEER_REVIEW_POINTS") int peerReviewPoints, @Column("CODE_REVIEW_POINTS") int codeReviewPoints, int coins) {}
+public record Peer(@Id Integer id, String name, PeerState state, int wave, int intensive, int xp, @Column("PEER_REVIEW_POINTS") int peerReviewPoints, @Column("CODE_REVIEW_POINTS") int codeReviewPoints, int coins) {}

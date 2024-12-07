@@ -108,7 +108,7 @@ public class ApiScraperService {
                     ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 500, TimeUnit.MILLISECONDS);
                     PeerResponse pr = asd.get();
                     if (p.xp() != pr.expValue()) {
-                        changedPeers.add(new Peer(p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), p.peerReviewPoints(), p.codeReviewPoints(), p.coins()));
+                        changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), p.peerReviewPoints(), p.codeReviewPoints(), p.coins()));
                     }
                 }
             } catch (ExecutionException e) {
