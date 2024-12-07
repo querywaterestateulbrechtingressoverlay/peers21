@@ -9,6 +9,6 @@ import java.util.List;
 public interface PeerRepository extends CrudRepository<Peer, String> {
     Peer findByName(String name);
     List<Peer> findByWave(int wave);
-    @Query("SELECT * FROM peer_data")
+    @Query("SELECT * FROM PEER_DATA")
     List<Peer> getAllPeers();
 }
