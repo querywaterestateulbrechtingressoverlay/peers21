@@ -89,7 +89,7 @@ public class ApiScraperService {
     @Scheduled(fixedRateString = "PT15M")
     public void updatePeerList() {
         logger.info("updating peer info...");
-        if (System.currentTimeMillis() <= keyExpiryDate) {
+        if (System.currentTimeMillis() >= keyExpiryDate) {
             logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
             updateApiKey();
         }
