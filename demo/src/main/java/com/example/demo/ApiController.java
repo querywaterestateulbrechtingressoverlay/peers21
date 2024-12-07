@@ -22,23 +22,22 @@ public class ApiController {
 
     @GetMapping("/")
     void updateApi() {
-        repo.save(new Peer(null, "cypherco", PeerState.ACTIVE, 2, 4, 9999, 9999, 9999, 9999));
         apiScraper.updateApiKey();
         apiScraper.updatePeerList();
     }
 
-//    @GetMapping("/peers")
-//    List<Peer> getPeers() {
-//        return repo.getAllPeers();
-//    }
-//    @GetMapping("/peers/wave/{waveId}")
-//    List<Peer> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
-//        return repo.findByWave(wave);
-//    }
-//
-//    @GetMapping("/peers/{peerUsername}")
-//    Peer getPeerById(@PathVariable @NotBlank String peerUsername) {
-//        return repo.findByName(peerUsername);
-//    }
+    @GetMapping("/peers")
+    List<Peer> getPeers() {
+        return repo.getAllPeers();
+    }
+    @GetMapping("/peers/wave/{waveId}")
+    List<Peer> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
+        return repo.findByWave(wave);
+    }
+
+    @GetMapping("/peers/{peerUsername}")
+    Peer getPeerById(@PathVariable @NotBlank String peerUsername) {
+        return repo.findByName(peerUsername);
+    }
 
 }
