@@ -86,7 +86,7 @@ public class ApiScraperService {
             apiKey = "";
         }
     }
-    @Scheduled(fixedRateString = "PT15M", fixedDelay = 1000)
+    @Scheduled(fixedRateString = "PT1M", fixedDelay = 1000)
     public void updatePeerList() {
         logger.info("updating peer info...");
         if (System.currentTimeMillis() >= keyExpiryDate) {
