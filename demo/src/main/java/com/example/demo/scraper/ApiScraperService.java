@@ -48,7 +48,7 @@ public class ApiScraperService {
         logger.info("retrieving API password from environment variables...");
         String apiPassword = System.getenv("API_PASSWORD");
         if (apiPassword == null) {
-            logger.error("System variable API_USERNAME is not set");
+            logger.error("System variable API_PASSWORD is not set");
             error = true;
         }
         if (error) {
@@ -61,10 +61,10 @@ public class ApiScraperService {
             tokenRequestBody.add("client_id", "s21-open-api");
         }
     }
-    @Bean
-    public ApiScraperService apiScraper() {
-        return new ApiScraperService();
-    }
+//    @Bean
+//    public ApiScraperService apiScraper() {
+//        return new ApiScraperService();
+//    }
     public void updateApiKey() {
         logger.info("updating API key...");
         RestClient apiReqClient = RestClient.builder()
@@ -88,7 +88,7 @@ public class ApiScraperService {
             apiKey = "";
         }
     }
-    @Scheduled(fixedRateString = "PT15M")
+    @Scheduled(fixedRateString = "PT1M")
     public void updatePeerList() {
         logger.info("updating peer info...");
         if (System.currentTimeMillis() >= keyExpiryDate) {
