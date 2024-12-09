@@ -22,8 +22,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @EnableScheduling
 @Service
@@ -88,6 +90,15 @@ public class ApiScraperService {
             apiKey = "";
         }
     }
+
+    boolean diff(Peer p, PeerResponse pr, PeerPointsResponse ppr) {
+        return p.state().name().equals(pr.status()) && p.xp() == pr.expValue() && p.peerReviewPoints() == ppr.peerReviewPoints() && p.codeReviewPoints() == ppr.codeReviewPoints() && p.coins() == ppr.coins();
+    }
+
+    Peer updatedPeer(Peer p, PeerResponse pr, PeerPointsResponse ppr) {
+        return new Peer(p.id(), p.name(), PeerState.valueOf(pr.status()), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins());
+    }
+
     @Scheduled(fixedRateString = "PT1M")
     public void updatePeerList() {
         logger.info("updating peer info...");
@@ -103,27 +114,46 @@ public class ApiScraperService {
                     .build();
             var peerList = repo.getAllPeers();
             var changedPeers = new ArrayList<Peer>();
-            try (ScheduledExecutorService requestExecutor = Executors.newSingleThreadScheduledExecutor()) {
-                for (Peer p : peerList) {
-                    logger.info("peer " + p.name());
-                    Callable<PeerResponse> cpr = () -> apiReqClient.get()
-                            .uri(apiUrl + "/participants/" + p.name())
+            try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
+                AtomicInteger counter = new AtomicInteger(0);
+                Iterator<Peer> peerIterator = peerList.iterator();
+                requestExecutor.scheduleAtFixedRate(() -> {
+                    Peer currentPeer = peerIterator.next();
+                    logger.info("peer " + currentPeer.name());
+                    PeerResponse peerResponse = apiReqClient.get()
+                            .uri(apiUrl + "/participants/" + currentPeer.name())
                             .retrieve()
                             .body(PeerResponse.class);
-                    Callable<PeerPointsResponse> cppr = () -> apiReqClient.get()
-                            .uri(apiUrl + "/participants/" + p.name() + "/points")
+                    PeerPointsResponse peerPointsResponse = apiReqClient.get()
+                            .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
                             .retrieve()
                             .body(PeerPointsResponse.class);
-                    ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 1000, TimeUnit.MILLISECONDS);
-                    ScheduledFuture<PeerPointsResponse> dsa = requestExecutor.schedule(cppr, 1000, TimeUnit.MILLISECONDS);
-                    PeerResponse pr = asd.get();
-                    PeerPointsResponse ppr = dsa.get();
-                    logger.info("response received");
-                    if (p.state() != PeerState.valueOf(pr.status()) || p.xp() != pr.expValue() || ppr.peerReviewPoints() != p.peerReviewPoints() || ppr.codeReviewPoints() != p.codeReviewPoints() || ppr.coins() != p.coins()) {
-                        logger.info("values received differ from values in database, updating...");
-                        changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins()));
+                    if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
+                        changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
                     }
-                }
+                    counter.incrementAndGet();
+                }, 0, 400, TimeUnit.MILLISECONDS);
+
+//                for (Peer p : peerList) {
+//                    logger.info("peer " + p.name());
+//                    Callable<PeerResponse> cpr = () -> apiReqClient.get()
+//                            .uri(apiUrl + "/participants/" + p.name())
+//                            .retrieve()
+//                            .body(PeerResponse.class);
+//                    Callable<PeerPointsResponse> cppr = () -> apiReqClient.get()
+//                            .uri(apiUrl + "/participants/" + p.name() + "/points")
+//                            .retrieve()
+//                            .body(PeerPointsResponse.class);
+//                    ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 1000, TimeUnit.MILLISECONDS);
+//                    ScheduledFuture<PeerPointsResponse> dsa = requestExecutor.schedule(cppr, 1000, TimeUnit.MILLISECONDS);
+//                    PeerResponse pr = asd.get();
+//                    PeerPointsResponse ppr = dsa.get();
+//                    logger.info("response received");
+//                    if (p.state() != PeerState.valueOf(pr.status()) || p.xp() != pr.expValue() || ppr.peerReviewPoints() != p.peerReviewPoints() || ppr.codeReviewPoints() != p.codeReviewPoints() || ppr.coins() != p.coins()) {
+//                        logger.info("values received differ from values in database, updating...");
+//                        changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins()));
+//                    }
+//                }
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
