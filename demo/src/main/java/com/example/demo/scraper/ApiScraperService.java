@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -24,6 +25,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.*;
 
+@EnableScheduling
 @Service
 public class ApiScraperService {
 
@@ -86,7 +88,7 @@ public class ApiScraperService {
             apiKey = "";
         }
     }
-    @Scheduled(fixedRateString = "PT1M", fixedDelay = 1000)
+    @Scheduled(fixedRateString = "PT15M", fixedDelay = 1000)
     public void updatePeerList() {
         logger.info("updating peer info...");
         if (System.currentTimeMillis() >= keyExpiryDate) {
