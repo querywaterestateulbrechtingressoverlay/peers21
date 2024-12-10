@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @EnableScheduling
@@ -117,6 +118,7 @@ public class ApiScraperService {
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
             try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
+                AtomicBoolean done = new AtomicBoolean(false);
                 ScheduledFuture<?> f = requestExecutor.scheduleAtFixedRate(() -> {
                     Peer currentPeer = peerIterator.next();
                     logger.info("peer " + currentPeer.name());
@@ -136,10 +138,10 @@ public class ApiScraperService {
                         logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
                     }
                     counter.incrementAndGet();
+                    if (counter.get() == peerList.size()) {
+                        requestExecutor.shutdown();
+                    }
                 }, 0, 1000, TimeUnit.MILLISECONDS);
-                if (counter.get() == peerList.size()) {
-                    f.cancel(true);
-                }
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
