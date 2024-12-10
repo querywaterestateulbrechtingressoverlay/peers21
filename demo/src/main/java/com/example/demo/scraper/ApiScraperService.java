@@ -138,7 +138,7 @@ public class ApiScraperService {
                             logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
                         }
                         counter.incrementAndGet();
-                    }, 0, 400, TimeUnit.MILLISECONDS);
+                    }, 0, 1000, TimeUnit.MILLISECONDS);
                 }
             }
             if (!changedPeers.isEmpty()) {
