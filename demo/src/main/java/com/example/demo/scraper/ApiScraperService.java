@@ -9,7 +9,6 @@ import com.example.demo.scraper.dto.PeerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -118,28 +117,29 @@ public class ApiScraperService {
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
             try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
-                do {
-                    requestExecutor.scheduleAtFixedRate(() -> {
-                        Peer currentPeer = peerIterator.next();
-                        logger.info("peer " + currentPeer.name());
-                        try {
-                            PeerResponse peerResponse = apiReqClient.get()
-                                    .uri(apiUrl + "/participants/" + currentPeer.name())
-                                    .retrieve()
-                                    .body(PeerResponse.class);
-                            PeerPointsResponse peerPointsResponse = apiReqClient.get()
-                                    .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
-                                    .retrieve()
-                                    .body(PeerPointsResponse.class);
-                            if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
-                                changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
-                            }
-                        } catch (RestClientResponseException e) {
-                            logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
+                ScheduledFuture<?> f = requestExecutor.scheduleAtFixedRate(() -> {
+                    Peer currentPeer = peerIterator.next();
+                    logger.info("peer " + currentPeer.name());
+                    try {
+                        PeerResponse peerResponse = apiReqClient.get()
+                                .uri(apiUrl + "/participants/" + currentPeer.name())
+                                .retrieve()
+                                .body(PeerResponse.class);
+                        PeerPointsResponse peerPointsResponse = apiReqClient.get()
+                                .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
+                                .retrieve()
+                                .body(PeerPointsResponse.class);
+                        if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
+                            changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
                         }
-                        counter.incrementAndGet();
-                    }, 0, 1000, TimeUnit.MILLISECONDS);
-                } while (counter.get() != peerList.size());
+                    } catch (RestClientResponseException e) {
+                        logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
+                    }
+                    counter.incrementAndGet();
+                }, 0, 1000, TimeUnit.MILLISECONDS);
+                if (counter.get() == peerList.size()) {
+                    f.cancel(true);
+                }
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
