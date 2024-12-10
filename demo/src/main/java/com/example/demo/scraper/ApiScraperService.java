@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -114,48 +115,29 @@ public class ApiScraperService {
                     .build();
             var peerList = repo.getAllPeers();
             var changedPeers = new ArrayList<Peer>();
+            AtomicInteger counter = new AtomicInteger(0);
+            Iterator<Peer> peerIterator = peerList.iterator();
             try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
-                AtomicInteger counter = new AtomicInteger(0);
-                Iterator<Peer> peerIterator = peerList.iterator();
                 requestExecutor.scheduleAtFixedRate(() -> {
                     Peer currentPeer = peerIterator.next();
                     logger.info("peer " + currentPeer.name());
-                    PeerResponse peerResponse = apiReqClient.get()
-                            .uri(apiUrl + "/participants/" + currentPeer.name())
-                            .retrieve()
-                            .body(PeerResponse.class);
-                    PeerPointsResponse peerPointsResponse = apiReqClient.get()
-                            .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
-                            .retrieve()
-                            .body(PeerPointsResponse.class);
-                    if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
-                        changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
+                    try {
+                        PeerResponse peerResponse = apiReqClient.get()
+                                .uri(apiUrl + "/participants/" + currentPeer.name())
+                                .retrieve()
+                                .body(PeerResponse.class);
+                        PeerPointsResponse peerPointsResponse = apiReqClient.get()
+                                .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
+                                .retrieve()
+                                .body(PeerPointsResponse.class);
+                        if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
+                            changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
+                        }
+                    } catch (RestClientResponseException e) {
+                        logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
                     }
                     counter.incrementAndGet();
                 }, 0, 400, TimeUnit.MILLISECONDS);
-
-//                for (Peer p : peerList) {
-//                    logger.info("peer " + p.name());
-//                    Callable<PeerResponse> cpr = () -> apiReqClient.get()
-//                            .uri(apiUrl + "/participants/" + p.name())
-//                            .retrieve()
-//                            .body(PeerResponse.class);
-//                    Callable<PeerPointsResponse> cppr = () -> apiReqClient.get()
-//                            .uri(apiUrl + "/participants/" + p.name() + "/points")
-//                            .retrieve()
-//                            .body(PeerPointsResponse.class);
-//                    ScheduledFuture<PeerResponse> asd = requestExecutor.schedule(cpr, 1000, TimeUnit.MILLISECONDS);
-//                    ScheduledFuture<PeerPointsResponse> dsa = requestExecutor.schedule(cppr, 1000, TimeUnit.MILLISECONDS);
-//                    PeerResponse pr = asd.get();
-//                    PeerPointsResponse ppr = dsa.get();
-//                    logger.info("response received");
-//                    if (p.state() != PeerState.valueOf(pr.status()) || p.xp() != pr.expValue() || ppr.peerReviewPoints() != p.peerReviewPoints() || ppr.codeReviewPoints() != p.codeReviewPoints() || ppr.coins() != p.coins()) {
-//                        logger.info("values received differ from values in database, updating...");
-//                        changedPeers.add(new Peer(p.id(), p.name(), p.state(), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins()));
-//                    }
-//                }
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
