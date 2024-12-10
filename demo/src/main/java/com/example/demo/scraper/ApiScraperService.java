@@ -142,6 +142,8 @@ public class ApiScraperService {
                         }
                     } catch (RestClientResponseException e) {
                         logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
+                    } catch (Exception e) {
+                        logger.error(e.getMessage());
                     }
                 }, 0, 400, TimeUnit.MILLISECONDS);
             }
