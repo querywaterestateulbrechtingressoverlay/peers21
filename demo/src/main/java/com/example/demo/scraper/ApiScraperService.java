@@ -123,6 +123,7 @@ public class ApiScraperService {
                     Peer currentPeer = peerIterator.next();
                     logger.info("peer " + currentPeer.name());
                     try {
+                        logger.info("ASD");
                         PeerResponse peerResponse = apiReqClient.get()
                                 .uri(apiUrl + "/participants/" + currentPeer.name())
                                 .retrieve()
