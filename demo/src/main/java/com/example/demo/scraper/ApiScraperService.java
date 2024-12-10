@@ -119,7 +119,12 @@ public class ApiScraperService {
             Iterator<Peer> peerIterator = peerList.iterator();
             try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
                 AtomicBoolean done = new AtomicBoolean(false);
+                logger.info("ASD");
                 ScheduledFuture<?> f = requestExecutor.scheduleAtFixedRate(() -> {
+                    counter.incrementAndGet();
+                    if (counter.get() == peerList.size()) {
+                        requestExecutor.shutdown();
+                    }
                     Peer currentPeer = peerIterator.next();
                     logger.info("peer " + currentPeer.name());
                     try {
@@ -138,11 +143,7 @@ public class ApiScraperService {
                     } catch (RestClientResponseException e) {
                         logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
                     }
-                    counter.incrementAndGet();
-                    if (counter.get() == peerList.size()) {
-                        requestExecutor.shutdown();
-                    }
-                }, 0, 1000, TimeUnit.MILLISECONDS);
+                }, 0, 400, TimeUnit.MILLISECONDS);
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
