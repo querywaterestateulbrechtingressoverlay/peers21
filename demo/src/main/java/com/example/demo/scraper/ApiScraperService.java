@@ -118,7 +118,7 @@ public class ApiScraperService {
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
             try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
-                while (peerIterator.hasNext()) {
+                do {
                     requestExecutor.scheduleAtFixedRate(() -> {
                         Peer currentPeer = peerIterator.next();
                         logger.info("peer " + currentPeer.name());
@@ -139,7 +139,7 @@ public class ApiScraperService {
                         }
                         counter.incrementAndGet();
                     }, 0, 1000, TimeUnit.MILLISECONDS);
-                }
+                } while (counter.get() != peerList.size());
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
