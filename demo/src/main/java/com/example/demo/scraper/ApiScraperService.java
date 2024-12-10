@@ -148,6 +148,8 @@ public class ApiScraperService {
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
                 logger.info("update finished, updated " + changedPeers.size() + " peers");
+            } else {
+                logger.info("no peers were updated");
             }
         } else {
             logger.warn("no API key found, update stopped");
