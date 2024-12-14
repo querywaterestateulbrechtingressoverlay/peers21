@@ -6,6 +6,7 @@ import com.example.demo.data.PeerState;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.example.demo.scraper.dto.PeerPointsResponse;
 import com.example.demo.scraper.dto.PeerResponse;
+import com.example.demo.scraper.util.RateLimitedExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,13 +118,13 @@ public class ApiScraperService {
             var changedPeers = new ArrayList<Peer>();
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
-            try (ScheduledExecutorService requestExecutor = Executors.newScheduledThreadPool(3)) {
+            try (RateLimitedExecutor rateLimitedExecutor = new RateLimitedExecutor(1000, 3, 2)) {
                 AtomicBoolean done = new AtomicBoolean(false);
                 logger.info("ASD");
-                ScheduledFuture<?> f = requestExecutor.scheduleAtFixedRate(() -> {
+                rateLimitedExecutor.execute(() -> {
                     counter.incrementAndGet();
                     if (counter.get() == peerList.size()) {
-                        requestExecutor.shutdown();
+                        rateLimitedExecutor.shutdown();
                     }
                     Peer currentPeer = peerIterator.next();
                     logger.info("peer " + currentPeer.name());
@@ -144,8 +145,8 @@ public class ApiScraperService {
                         logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
                     } catch (Exception e) {
                         logger.error(e.getMessage());
-                    }
-                }, 0, 400, TimeUnit.MILLISECONDS);
+                    }}
+                    );
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
