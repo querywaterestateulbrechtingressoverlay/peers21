@@ -19,6 +19,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -150,6 +151,8 @@ public class ApiScraperService {
                                       .onStatus(HttpStatusCode::is4xxClientError, (a, b) -> {
                                           if (b.getStatusCode() == HttpStatusCode.valueOf(429)) {
                                               tooManyRequests.set(true);
+                                          } else {
+                                              throw new RestClientResponseException(a.getMethod().toString() + a.getURI(), b.getStatusCode(), b.getStatusText(), a.getHeaders(), b.getBody().readAllBytes(), Charset.defaultCharset());
                                           }
                                       })
                                       .body(PeerResponse.class);
