@@ -4,6 +4,7 @@ import com.example.demo.data.Peer;
 import com.example.demo.data.PeerRepository;
 import com.example.demo.data.PeerState;
 import com.example.demo.scraper.dto.ApiKeyResponse;
+import com.example.demo.scraper.dto.Campus;
 import com.example.demo.scraper.dto.PeerPointsResponse;
 import com.example.demo.scraper.dto.PeerResponse;
 import io.github.bucket4j.Bucket;
@@ -26,6 +27,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,6 +43,9 @@ public class ApiScraperService {
     private final long lastUpdateDate = System.currentTimeMillis();
     private long keyExpiryDate = System.currentTimeMillis();
     Logger logger = LoggerFactory.getLogger(ApiScraperService.class);
+    private RestClient apiReqClient = RestClient.builder()
+      .baseUrl(apiUrl)
+      .build();
     @Autowired
     PeerRepository repo;
     ApiScraperService() {
@@ -90,6 +95,7 @@ public class ApiScraperService {
             keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
             logger.info("successfully updated API key, new key expiry date = " + LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
             logger.info("key = " + apiKey);
+            apiReqClient.mutate().defaultHeader("Authorization", "Bearer " + apiKey);
         } else {
             apiKey = "";
         }
@@ -110,6 +116,42 @@ public class ApiScraperService {
           .body(PeerResponse.class);
     }
 
+    <T> T tryToRetrieveUntilSuccess(Class<T> clazz, String url, RestClient client) {
+        AtomicBoolean tooManyRequests = new AtomicBoolean(false);
+        T returnValue;
+        while (true) {
+            returnValue = client.get()
+              .uri(url)
+              .accept(MediaType.APPLICATION_JSON)
+              .exchange((req, resp) -> {
+                  if (resp.getStatusCode() != HttpStatus.OK) {
+                      if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                          tooManyRequests.set(true);
+                          return null;
+                      } else {
+                          throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
+                      }
+                  } else {
+                      return resp.bodyTo(clazz);
+                  }
+              });
+        if (tooManyRequests.get()) {
+            continue;
+        }
+        break;
+        }
+        return returnValue;
+    }
+
+    List<Campus> listCampuses() {
+        logger.info("retrieving campus list...");
+        if (System.currentTimeMillis() >= keyExpiryDate) {
+            logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
+            updateApiKey();
+        }
+
+    }
+
     @Scheduled(fixedRateString = "PT1M")
     public void updatePeerList() {
         logger.info("updating peer info...");
@@ -117,12 +159,6 @@ public class ApiScraperService {
             logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
             updateApiKey();
         }
-        logger.info("starting peer list update...");
-        if (!apiKey.isEmpty()) {
-            RestClient apiReqClient = RestClient.builder()
-                    .baseUrl(apiUrl)
-                    .defaultHeader("Authorization", "Bearer " + apiKey)
-                    .build();
             var peerList = repo.getAllPeers();
             var changedPeers = new ArrayList<Peer>();
             AtomicInteger counter = new AtomicInteger(0);
@@ -146,48 +182,10 @@ public class ApiScraperService {
                             while (!(peerDataRetrieved && peerPointDataRetrieved)) {
                                 AtomicBoolean tooManyRequests = new AtomicBoolean(false);
                                 if (!peerDataRetrieved && bucket.tryConsume(1)) {
-                                    peerResponse = apiReqClient.get()
-                                      .uri(apiUrl + "/participants/" + p.name())
-                                      .accept(MediaType.APPLICATION_JSON)
-                                      .exchange((req, resp) -> {
-                                          if (resp.getStatusCode() != HttpStatus.OK) {
-                                              if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                                                  tooManyRequests.set(true);
-                                                  return null;
-                                              } else {
-                                                  throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
-                                              }
-                                          } else {
-                                              return resp.bodyTo(PeerResponse.class);
-                                          }
-                                      });
-                                    if (tooManyRequests.get()) {
-                                        continue;
-                                    }
-                                    tooManyRequests.set(false);
-                                    peerDataRetrieved = true;
+                                    peerResponse = tryToRetrieveUntilSuccess(PeerResponse.class, apiUrl + "/participants/" + p.name(), apiReqClient);
                                 }
                                 if (!peerPointDataRetrieved && bucket.tryConsume(1)) {
-                                    peerPointsResponse = apiReqClient.get()
-                                      .uri(apiUrl + "/participants/" + p.name() + "/points")
-                                      .accept(MediaType.APPLICATION_JSON)
-                                      .exchange((req, resp) -> {
-                                          if (resp.getStatusCode() != HttpStatus.OK) {
-                                              if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                                                  tooManyRequests.set(true);
-                                                  return null;
-                                              } else {
-                                                  throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
-                                              }
-                                          } else {
-                                              return resp.bodyTo(PeerPointsResponse.class);
-                                          }
-                                      });
-                                    if (tooManyRequests.get()) {
-                                        continue;
-                                    }
-                                    tooManyRequests.set(false);
-                                    peerPointDataRetrieved = true;
+                                    peerPointsResponse = tryToRetrieveUntilSuccess(PeerPointsResponse.class, apiUrl + "/participants/" + p.name() + "/points", apiReqClient);
                                 }
                             }
                             if (!diff(p, peerResponse, peerPointsResponse)) {
@@ -210,9 +208,6 @@ public class ApiScraperService {
             } else {
                 logger.info("no peers were updated");
             }
-        } else {
-            logger.warn("no API key found, update stopped");
-        }
     }
     public Date getLastUpdateDate() {
         return new Date(lastUpdateDate);
