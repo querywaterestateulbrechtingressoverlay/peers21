@@ -6,9 +6,7 @@ import com.example.demo.data.PeerState;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.example.demo.scraper.dto.PeerPointsResponse;
 import com.example.demo.scraper.dto.PeerResponse;
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -145,18 +142,34 @@ public class ApiScraperService {
                             boolean peerPointDataRetrieved = false;
                             PeerPointsResponse peerPointsResponse = null;
                             while (!(peerDataRetrieved && peerPointDataRetrieved)) {
+                                AtomicBoolean tooManyRequests = new AtomicBoolean(false);
                                 if (!peerDataRetrieved && bucket.tryConsume(1)) {
                                     peerResponse = apiReqClient.get()
                                       .uri(apiUrl + "/participants/" + p.name())
                                       .retrieve()
+                                      .onStatus(HttpStatusCode::is4xxClientError, (a, b) -> {
+                                          if (b.getStatusCode() == HttpStatusCode.valueOf(429)) {
+                                              tooManyRequests.set(true);
+                                          }
+                                      })
                                       .body(PeerResponse.class);
+                                    tooManyRequests.set(false);
                                     peerDataRetrieved = true;
                                 }
                                 if (!peerPointDataRetrieved && bucket.tryConsume(1)) {
                                     peerPointsResponse = apiReqClient.get()
                                       .uri(apiUrl + "/participants/" + p.name() + "/points")
                                       .retrieve()
+                                      .onStatus(HttpStatusCode::is4xxClientError, (a, b) -> {
+                                          if (b.getStatusCode() == HttpStatusCode.valueOf(429)) {
+                                              tooManyRequests.set(true);
+                                          }
+                                      })
                                       .body(PeerPointsResponse.class);
+                                    if (tooManyRequests.get()) {
+                                        continue;
+                                    }
+                                    tooManyRequests.set(false);
                                     peerPointDataRetrieved = true;
                                 }
                             }
