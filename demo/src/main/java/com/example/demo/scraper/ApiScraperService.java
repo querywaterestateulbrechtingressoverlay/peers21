@@ -153,14 +153,17 @@ public class ApiScraperService {
                                           if (resp.getStatusCode() != HttpStatus.OK) {
                                               if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
                                                   tooManyRequests.set(true);
+                                                  return null;
                                               } else {
                                                   throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
                                               }
                                           } else {
                                               return resp.bodyTo(PeerResponse.class);
                                           }
-                                        return null;
                                       });
+                                    if (tooManyRequests.get()) {
+                                        continue;
+                                    }
                                     tooManyRequests.set(false);
                                     peerDataRetrieved = true;
                                 }
@@ -172,13 +175,13 @@ public class ApiScraperService {
                                           if (resp.getStatusCode() != HttpStatus.OK) {
                                               if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
                                                   tooManyRequests.set(true);
+                                                  return null;
                                               } else {
                                                   throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
                                               }
                                           } else {
                                               return resp.bodyTo(PeerPointsResponse.class);
                                           }
-                                          return null;
                                       });
                                     if (tooManyRequests.get()) {
                                         continue;
