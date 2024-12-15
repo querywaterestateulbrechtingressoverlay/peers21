@@ -122,7 +122,7 @@ public class ApiScraperService {
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
             Bucket bucket = Bucket.builder()
-              .addLimit(b -> b.capacity(3).refillGreedy(3, Duration.ofSeconds(1))).build();
+              .addLimit(b -> b.capacity(3).refillGreedy(5, Duration.ofSeconds(2))).build();
             try (ExecutorService rateLimitedExecutor = Executors.newFixedThreadPool(3)) {
                 while (counter.get() != peerList.size()) {
                     if (bucket.tryConsume(1)) {
