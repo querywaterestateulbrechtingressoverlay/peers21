@@ -6,7 +6,9 @@ import com.example.demo.data.PeerState;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.example.demo.scraper.dto.PeerPointsResponse;
 import com.example.demo.scraper.dto.PeerResponse;
-import com.example.demo.scraper.util.RateLimitedExecutor;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -118,35 +121,40 @@ public class ApiScraperService {
             var changedPeers = new ArrayList<Peer>();
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
-            try (RateLimitedExecutor rateLimitedExecutor = new RateLimitedExecutor(1000, 3, 2)) {
-                AtomicBoolean done = new AtomicBoolean(false);
-                logger.info("ASD");
-                rateLimitedExecutor.execute(() -> {
-                    counter.incrementAndGet();
-                    if (counter.get() == peerList.size()) {
-                        rateLimitedExecutor.shutdown();
-                    }
-                    Peer currentPeer = peerIterator.next();
-                    logger.info("peer " + currentPeer.name());
-                    try {
+            Bucket bucket = Bucket.builder()
+              .addLimit(b -> b.capacity(3).refillIntervally(3, Duration.ofSeconds(1))).build();
+            try (ExecutorService rateLimitedExecutor = Executors.newFixedThreadPool(3)) {
+                while (counter.get() != peerList.size()) {
+                    if (bucket.tryConsume(1)) {
                         logger.info("ASD");
-                        PeerResponse peerResponse = apiReqClient.get()
-                                .uri(apiUrl + "/participants/" + currentPeer.name())
-                                .retrieve()
-                                .body(PeerResponse.class);
-                        PeerPointsResponse peerPointsResponse = apiReqClient.get()
-                                .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
-                                .retrieve()
-                                .body(PeerPointsResponse.class);
-                        if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
-                            changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
-                        }
-                    } catch (RestClientResponseException e) {
-                        logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
-                    } catch (Exception e) {
-                        logger.error(e.getMessage());
-                    }}
-                    );
+                        rateLimitedExecutor.execute(() -> {
+                            counter.incrementAndGet();
+                            if (counter.get() == peerList.size()) {
+                                rateLimitedExecutor.shutdown();
+                            }
+                            Peer currentPeer = peerIterator.next();
+                            logger.info("peer " + currentPeer.name());
+                            try {
+                                logger.info("ASD");
+                                PeerResponse peerResponse = apiReqClient.get()
+                                  .uri(apiUrl + "/participants/" + currentPeer.name())
+                                  .retrieve()
+                                  .body(PeerResponse.class);
+                                PeerPointsResponse peerPointsResponse = apiReqClient.get()
+                                  .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
+                                  .retrieve()
+                                  .body(PeerPointsResponse.class);
+                                if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
+                                    changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
+                                }
+                            } catch (RestClientResponseException e) {
+                                logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
+                            } catch (Exception e) {
+                                logger.error(e.getMessage());
+                            }}
+                        );
+                    }
+                }
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
