@@ -10,6 +10,7 @@ import io.github.bucket4j.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -147,28 +148,38 @@ public class ApiScraperService {
                                 if (!peerDataRetrieved && bucket.tryConsume(1)) {
                                     peerResponse = apiReqClient.get()
                                       .uri(apiUrl + "/participants/" + p.name())
-                                      .retrieve()
-                                      .onStatus(HttpStatusCode::is4xxClientError, (a, b) -> {
-                                          if (b.getStatusCode() == HttpStatusCode.valueOf(429)) {
-                                              tooManyRequests.set(true);
+                                      .accept(MediaType.APPLICATION_JSON)
+                                      .exchange((req, resp) -> {
+                                          if (resp.getStatusCode() != HttpStatus.OK) {
+                                              if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                                                  tooManyRequests.set(true);
+                                              } else {
+                                                  throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
+                                              }
                                           } else {
-                                              throw new RestClientResponseException(a.getMethod().toString() + a.getURI(), b.getStatusCode(), b.getStatusText(), a.getHeaders(), b.getBody().readAllBytes(), Charset.defaultCharset());
+                                              return resp.bodyTo(PeerResponse.class);
                                           }
-                                      })
-                                      .body(PeerResponse.class);
+                                        return null;
+                                      });
                                     tooManyRequests.set(false);
                                     peerDataRetrieved = true;
                                 }
                                 if (!peerPointDataRetrieved && bucket.tryConsume(1)) {
                                     peerPointsResponse = apiReqClient.get()
                                       .uri(apiUrl + "/participants/" + p.name() + "/points")
-                                      .retrieve()
-                                      .onStatus(HttpStatusCode::is4xxClientError, (a, b) -> {
-                                          if (b.getStatusCode() == HttpStatusCode.valueOf(429)) {
-                                              tooManyRequests.set(true);
+                                      .accept(MediaType.APPLICATION_JSON)
+                                      .exchange((req, resp) -> {
+                                          if (resp.getStatusCode() != HttpStatus.OK) {
+                                              if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                                                  tooManyRequests.set(true);
+                                              } else {
+                                                  throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
+                                              }
+                                          } else {
+                                              return resp.bodyTo(PeerPointsResponse.class);
                                           }
-                                      })
-                                      .body(PeerPointsResponse.class);
+                                          return null;
+                                      });
                                     if (tooManyRequests.get()) {
                                         continue;
                                     }
