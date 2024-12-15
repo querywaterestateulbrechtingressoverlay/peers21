@@ -128,7 +128,7 @@ public class ApiScraperService {
             var changedPeers = new ArrayList<Peer>();
             AtomicInteger counter = new AtomicInteger(0);
             Bucket bucket = Bucket.builder()
-              .addLimit(b -> b.capacity(3).refillGreedy(3, Duration.ofSeconds(1))).build();
+              .addLimit(b -> b.capacity(3).refillGreedy(2, Duration.ofSeconds(1))).build();
             var peerFutures = new ArrayList<CompletableFuture<Void>>();
             try (ExecutorService rateLimitedExecutor = Executors.newFixedThreadPool(3)) {
                 for (Peer p : peerList) {
