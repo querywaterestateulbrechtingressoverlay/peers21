@@ -127,40 +127,52 @@ public class ApiScraperService {
             var peerList = repo.getAllPeers();
             var changedPeers = new ArrayList<Peer>();
             AtomicInteger counter = new AtomicInteger(0);
-            Iterator<Peer> peerIterator = peerList.iterator();
             Bucket bucket = Bucket.builder()
               .addLimit(b -> b.capacity(3).refillGreedy(3, Duration.ofSeconds(1))).build();
+            var peerFutures = new ArrayList<CompletableFuture<Void>>();
             try (ExecutorService rateLimitedExecutor = Executors.newFixedThreadPool(3)) {
-                while (counter.get() != peerList.size()) {
-                    if (bucket.tryConsume(2)) {
+                for (Peer p : peerList) {
+                    CompletableFuture<Void> asd = CompletableFuture.supplyAsync(() -> {
                         logger.info("ASD");
-                        rateLimitedExecutor.execute(() -> {
-                            if (counter.get() == peerList.size()) {
-                                rateLimitedExecutor.shutdown();
-                            }
-                            Peer currentPeer = peerIterator.next();
-                            logger.info("peer " + currentPeer.name());
-                            try {
-                                logger.info("ASD");
-                                PeerResponse peerResponse = apiReqClient.get()
-                                  .uri(apiUrl + "/participants/" + currentPeer.name())
-                                  .retrieve()
-                                  .body(PeerResponse.class);
-                                PeerPointsResponse peerPointsResponse = apiReqClient.get()
-                                  .uri(apiUrl + "/participants/" + currentPeer.name() + "/points")
-                                  .retrieve()
-                                  .body(PeerPointsResponse.class);
-                                if (!diff(currentPeer, peerResponse, peerPointsResponse)) {
-                                    changedPeers.add(updatedPeer(currentPeer, peerResponse, peerPointsResponse));
+                        if (counter.get() == peerList.size()) {
+                            rateLimitedExecutor.shutdown();
+                        }
+                        logger.info("peer " + p.name());
+                        try {
+                            logger.info("ASD");
+                            boolean peerDataRetrieved = false;
+                            PeerResponse peerResponse = null;
+                            boolean peerPointDataRetrieved = false;
+                            PeerPointsResponse peerPointsResponse = null;
+                            while (!(peerDataRetrieved && peerPointDataRetrieved)) {
+                                if (!peerDataRetrieved && bucket.tryConsume(1)) {
+                                    peerResponse = apiReqClient.get()
+                                      .uri(apiUrl + "/participants/" + p.name())
+                                      .retrieve()
+                                      .body(PeerResponse.class);
+                                    peerDataRetrieved = true;
                                 }
-                            } catch (RestClientResponseException e) {
-                                logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
-                            } catch (Exception e) {
-                                logger.error(e.getMessage());
-                            }}
-                        );
-                    }
+                                if (!peerPointDataRetrieved && bucket.tryConsume(1)) {
+                                    peerPointsResponse = apiReqClient.get()
+                                      .uri(apiUrl + "/participants/" + p.name() + "/points")
+                                      .retrieve()
+                                      .body(PeerPointsResponse.class);
+                                    peerPointDataRetrieved = true;
+                                }
+                            }
+                            if (!diff(p, peerResponse, peerPointsResponse)) {
+                                changedPeers.add(updatedPeer(p, peerResponse, peerPointsResponse));
+                            }
+                        } catch (RestClientResponseException e) {
+                            logger.error("received error " + e.getStatusCode() + ", message = " + e.getResponseBodyAsString());
+                        } catch (Exception e) {
+                            logger.error(e.getMessage());
+                        }
+                      return null;
+                    }, rateLimitedExecutor);
+                    peerFutures.add(asd);
                 }
+                peerFutures.forEach(CompletableFuture::join);
             }
             if (!changedPeers.isEmpty()) {
                 repo.saveAll(changedPeers);
