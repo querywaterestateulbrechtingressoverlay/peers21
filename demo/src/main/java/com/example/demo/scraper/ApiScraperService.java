@@ -1,7 +1,6 @@
 package com.example.demo.scraper;
 
 import com.example.demo.data.Peer;
-import com.example.demo.data.PeerRepository;
 import com.example.demo.data.PeerState;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.example.demo.scraper.dto.Campus;
