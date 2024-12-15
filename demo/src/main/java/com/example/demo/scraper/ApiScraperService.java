@@ -104,6 +104,13 @@ public class ApiScraperService {
         return new Peer(p.id(), p.name(), PeerState.valueOf(pr.status()), p.wave(), p.intensive(), pr.expValue(), ppr.peerReviewPoints(), ppr.codeReviewPoints(), ppr.coins());
     }
 
+    PeerResponse sendPeerInfoRequest(RestClient client, String peerName) {
+      return client.get()
+          .uri(apiUrl + "/participants/" + peerName)
+          .retrieve()
+          .body(PeerResponse.class);
+    }
+
     @Scheduled(fixedRateString = "PT1M")
     public void updatePeerList() {
         logger.info("updating peer info...");
@@ -122,13 +129,12 @@ public class ApiScraperService {
             AtomicInteger counter = new AtomicInteger(0);
             Iterator<Peer> peerIterator = peerList.iterator();
             Bucket bucket = Bucket.builder()
-              .addLimit(b -> b.capacity(3).refillGreedy(2, Duration.ofSeconds(1))).build();
+              .addLimit(b -> b.capacity(3).refillGreedy(3, Duration.ofSeconds(1))).build();
             try (ExecutorService rateLimitedExecutor = Executors.newFixedThreadPool(3)) {
                 while (counter.get() != peerList.size()) {
-                    if (bucket.tryConsume(1)) {
+                    if (bucket.tryConsume(2)) {
                         logger.info("ASD");
                         rateLimitedExecutor.execute(() -> {
-                            counter.incrementAndGet();
                             if (counter.get() == peerList.size()) {
                                 rateLimitedExecutor.shutdown();
                             }
