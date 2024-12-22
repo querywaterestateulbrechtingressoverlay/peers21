@@ -6,6 +6,7 @@ import io.github.bucket4j.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -20,10 +21,7 @@ import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +43,8 @@ public class ApiScraperService {
   ApiPeerDataRepository peerRepo;
   @Autowired
   ApiPeerPointsDataRepository peerPointsRepo;
+  @Autowired
+  ApiCampusDataRepository campusRepo;
   ApiScraperService() {
     boolean error = false;
     logger.info("retrieving API username from environment variables...");
@@ -129,13 +129,41 @@ public class ApiScraperService {
     return returnValue;
   }
 
-//  List<ApiCampusData> listCampuses() {
-//    logger.info("retrieving campus list...");
-//    if (System.currentTimeMillis() >= keyExpiryDate) {
-//      logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
-//      updateApiKey();
-//    }
-//  }
+  <T> List<T> tryToRetrieveListUntilSuccess(Class<T> clazz, String url, RestClient client) {
+    AtomicBoolean tooManyRequests = new AtomicBoolean(false);
+    List<T> returnValue;
+    while (true) {
+      returnValue = client.get()
+        .uri(url)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange((req, resp) -> {
+          if (resp.getStatusCode() != HttpStatus.OK) {
+            if (resp.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+              tooManyRequests.set(true);
+              return null;
+            } else {
+              throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
+            }
+          } else {
+            return resp.bodyTo(new ParameterizedTypeReference<List<T>>() {});
+          }
+        });
+      if (tooManyRequests.get()) {
+        continue;
+      }
+      break;
+    }
+    return returnValue;
+  }
+
+  public void updateCampuses() {
+    logger.info("retrieving campus list...");
+    if (System.currentTimeMillis() >= keyExpiryDate) {
+      logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
+      updateApiKey();
+    }
+    campusRepo.saveAll(tryToRetrieveListUntilSuccess(ApiCampusData.class, apiUrl + "/campuses", apiReqClient));
+  }
 
   @Scheduled(fixedRateString = "PT1M")
   public void updatePeerList() {

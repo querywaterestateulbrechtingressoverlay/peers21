@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import com.example.demo.data.ApiCampusData;
+import com.example.demo.data.ApiCampusDataRepository;
 import com.example.demo.data.ApiPeerData;
 import com.example.demo.data.ApiPeerDataRepository;
 import java.util.List;
@@ -19,11 +21,19 @@ public class ApiController {
 
     @Autowired
     ApiScraperService apiScraper;
+    @Autowired
+    ApiCampusDataRepository campusRepo;
 
     @GetMapping("/")
     void updateApi() {
+        apiScraper.updateCampuses();
         apiScraper.updateApiKey();
         apiScraper.updatePeerList();
+    }
+
+    @GetMapping("/campuses")
+    List<ApiCampusData> getCampuses() {
+        return StreamSupport.stream(campusRepo.findAll().spliterator(), false).toList();
     }
 
     @GetMapping("/peers")
