@@ -143,6 +143,7 @@ public class ApiScraperService {
               return null;
             } else {
               logger.error("xx" + resp.getStatusCode() + "xx");
+              logger.error(req.getHeaders().toString());
               throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
             }
           } else {
