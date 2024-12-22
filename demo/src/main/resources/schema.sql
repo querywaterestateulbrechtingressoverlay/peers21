@@ -1,4 +1,4 @@
-CREATE TABLE api_campus_data (id VARCHAR(255) PRIMARY KEY, short_name VARCHAR(255));
+CREATE TABLE api_campus_data (id VARCHAR(255) PRIMARY KEY, short_name VARCHAR(255), full_name VARCHAR(255));
 CREATE TABLE api_peer_points_data(login VARCHAR(255) PRIMARY KEY, peer_review_points INT, code_review_points INT, coins INT);
 CREATE TABLE api_peer_data(id INT PRIMARY KEY, login VARCHAR(255), class_name VARCHAR(255), parallel_name VARCHAR(255), exp_value INT, exp_to_next_level INT, campus_id INT, state VARCHAR(255), FOREIGN KEY(login) REFERENCES api_peer_points_data(login), FOREIGN KEY(campus_id) REFERENCES api_campus_data(id) );
 
