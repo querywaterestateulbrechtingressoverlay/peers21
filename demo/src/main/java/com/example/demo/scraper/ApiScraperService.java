@@ -162,7 +162,7 @@ public class ApiScraperService {
       logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
       updateApiKey();
     }
-    campusRepo.saveAll(tryToRetrieveListUntilSuccess(ApiCampusData.class, apiUrl + "/campuses", apiReqClient));
+    campusRepo.saveAll(tryToRetrieveListUntilSuccess(ApiCampusData.class, "/campuses", apiReqClient));
   }
 
   @Scheduled(fixedRateString = "PT1M")
