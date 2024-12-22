@@ -4,10 +4,10 @@ CREATE TABLE api_peer_data(id INT PRIMARY KEY, login VARCHAR(255), class_name VA
 
 CREATE TABLE intensives(id int PRIMARY KEY, start_date date, end_date date);
 
-INSERT INTO intensives VALUES (1, '23-10-2023', '17-11-2023');
-INSERT INTO intensives VALUES (2, '21-10-2023', '15-22-2023');
-INSERT INTO intensives VALUES (3, '05-02-2024', '01-03-2024');
-INSERT INTO intensives VALUES (4, '18-03-2024', '12-04-2024');
-INSERT INTO intensives VALUES (5, '24-06-2024', '19-07-2024');
-INSERT INTO intensives VALUES (6, '19-08-2024', '13-09-2024');
-INSERT INTO intensives VALUES (7, '30-09-2024', '25-10-2024');
+INSERT INTO intensives VALUES (1, '2023-10-23', '2023-11-17');
+INSERT INTO intensives VALUES (2, '2023-10-21', '2023-12-15');
+INSERT INTO intensives VALUES (3, '2024-02-05', '2024-03-01');
+INSERT INTO intensives VALUES (4, '2024-03-18', '2024-04-12');
+INSERT INTO intensives VALUES (5, '2024-06-24', '2024-07-19');
+INSERT INTO intensives VALUES (6, '2024-08-19', '2024-09-13');
+INSERT INTO intensives VALUES (7, '2024-09-30', '2024-10-25');
