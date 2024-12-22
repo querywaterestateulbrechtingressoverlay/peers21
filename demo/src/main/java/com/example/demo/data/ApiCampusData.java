@@ -8,7 +8,7 @@ import org.springframework.data.relational.core.mapping.Table;
 public record ApiCampusData(
     @Id
     @Column("id")
-    int id,
+    String id,
     @Column("short_name") String shortName,
     @Column("full_name") String fullName
 ) {
