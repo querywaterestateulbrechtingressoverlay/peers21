@@ -1,5 +1,5 @@
 CREATE TABLE api_campuses (
-    id INT PRIMARY KEY FOREIGN KEY,
+    id INT PRIMARY KEY,
     short_name VARCHAR(255));
 CREATE TABLE api_peer_data(
     id INT PRIMARY KEY,
