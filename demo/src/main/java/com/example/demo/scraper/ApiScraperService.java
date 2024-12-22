@@ -129,9 +129,9 @@ public class ApiScraperService {
     return returnValue;
   }
 
-  <T> List<T> tryToRetrieveListUntilSuccess(Class<T> clazz, String url, RestClient client) {
+  <T> T tryToRetrieveListUntilSuccess(ParameterizedTypeReference<T> parameterizedTypeReference, String url, RestClient client) {
     AtomicBoolean tooManyRequests = new AtomicBoolean(false);
-    List<T> returnValue;
+    T returnValue;
     while (true) {
       returnValue = client.get()
         .uri(url)
@@ -147,7 +147,7 @@ public class ApiScraperService {
               throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
             }
           } else {
-            return resp.bodyTo(new ParameterizedTypeReference<List<T>>() {});
+            return resp.bodyTo(parameterizedTypeReference);
           }
         });
       if (tooManyRequests.get()) {
@@ -164,7 +164,7 @@ public class ApiScraperService {
       logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
       updateApiKey();
     }
-    campusRepo.saveAll(tryToRetrieveListUntilSuccess(ApiCampusData.class, "/campuses", apiReqClient));
+    campusRepo.saveAll(tryToRetrieveListUntilSuccess(new ParameterizedTypeReference<List<ApiCampusData>>() {}, "/campuses", apiReqClient));
   }
 
   @Scheduled(fixedRateString = "PT1M")
