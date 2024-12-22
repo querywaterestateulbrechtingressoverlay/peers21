@@ -142,7 +142,7 @@ public class ApiScraperService {
               tooManyRequests.set(true);
               return null;
             } else {
-              System.out.println(resp.getStatusCode());
+              System.out.println("xx" + resp.getStatusCode() + "xx");
               throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
             }
           } else {
