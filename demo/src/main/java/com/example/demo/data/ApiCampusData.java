@@ -26,7 +26,7 @@ public class ApiCampusData implements Persistable<String> {
 
     @Override
     public boolean isNew() {
-        return false;
+        return true;
     }
 
     public String getShortName() {
