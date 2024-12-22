@@ -72,11 +72,11 @@ public class ApiScraperService {
 
   public void updateApiKey() {
     logger.info("updating API key...");
-    RestClient apiReqClient = RestClient.builder()
+    RestClient keyApiReqClient = RestClient.builder()
       .defaultHeader("Content-Type", "application/x-www-form-urlencoded")
       .build();
     String tokenUrl = "https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token";
-    ApiKeyResponse keyEntity = apiReqClient.post()
+    ApiKeyResponse keyEntity = keyApiReqClient.post()
       .uri(tokenUrl)
       .body(tokenRequestBody)
       .accept(MediaType.APPLICATION_JSON)
@@ -89,7 +89,7 @@ public class ApiScraperService {
       keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
       logger.info("successfully updated API key, new key expiry date = " + LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
       logger.info("key = " + apiKey);
-      apiReqClient.mutate().defaultHeader("Authorization", "Bearer " + apiKey);
+      apiReqClient = apiReqClient.mutate().defaultHeader("Authorization", "Bearer " + apiKey).build();
     } else {
       apiKey = "";
     }
