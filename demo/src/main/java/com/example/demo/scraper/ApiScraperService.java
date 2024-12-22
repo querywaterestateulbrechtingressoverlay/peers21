@@ -1,6 +1,7 @@
 package com.example.demo.scraper;
 
 import com.example.demo.data.*;
+import com.example.demo.scraper.dto.ApiCampusesDTO;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import io.github.bucket4j.Bucket;
 import org.slf4j.Logger;
@@ -142,8 +143,6 @@ public class ApiScraperService {
               tooManyRequests.set(true);
               return null;
             } else {
-              logger.error("xx" + resp.getStatusCode() + "xx");
-              logger.error(req.getHeaders().toString());
               throw new RestClientResponseException(req.getMethod().toString() + req.getURI(), resp.getStatusCode(), resp.getStatusText(), req.getHeaders(), resp.getBody().readAllBytes(), Charset.defaultCharset());
             }
           } else {
@@ -164,7 +163,7 @@ public class ApiScraperService {
       logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
       updateApiKey();
     }
-    campusRepo.saveAll(tryToRetrieveListUntilSuccess(new ParameterizedTypeReference<List<ApiCampusData>>() {}, "/campuses", apiReqClient));
+    campusRepo.saveAll(tryToRetrieveUntilSuccess(ApiCampusesDTO.class, "/campuses", apiReqClient).campuses());
   }
 
   @Scheduled(fixedRateString = "PT1M")
