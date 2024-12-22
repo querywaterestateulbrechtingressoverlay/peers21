@@ -1,8 +1,15 @@
 package com.example.demo.data;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
+@Table("api_peer_data")
 public record ApiPeerData(
+    @Id
+    @Column("id")
+    int id,
+    @Column("login")
     String login,
     @Column("class_name") String className,
     @Column("parallel_name") String parallelName,

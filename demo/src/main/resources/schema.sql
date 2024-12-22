@@ -1,7 +1,25 @@
-CREATE TABLE API_CAMPUSES (ID int PRIMARY KEY, SHORT_NAME varchar(255));
-CREATE TABLE API_PEER_DATA(LOGIN varchar(20) PRIMARY KEY, CLASS_NAME varchar(32), PARALLEL_NAME varchar(32), EXP_VALUE int, EXP_TO_NEXT_LEVEL int, CAMPUS_ID int, STATE varchar(18));
-CREATE TABLE API_PEER_POINTS_DATA(LOGIN varchar(8) PRIMARY KEY, PEER_REVIEW_POINTS int, CODE_REVIEW_POINTS int, COINS int);
-CREATE TABLE INTENSIVES(ID int PRIMARY KEY, START_DATE date, END_DATE date);
+CREATE TABLE api_campuses (
+    id INT PRIMARY KEY FOREIGN KEY,
+    short_name VARCHAR(255));
+CREATE TABLE api_peer_data(
+    id INT PRIMARY KEY,
+    login VARCHAR(255),
+    class_name VARCHAR(255),
+    parallel_name VARCHAR(255),
+    exp_value INT,
+    exp_to_next_level INT,
+    campus_id INT,
+    state VARCHAR(255),
+    FOREIGN KEY(id) REFERENCES api_peer_points_data(id),
+    FOREIGN KEY(campus_id) REFERENCES api_campuses(id)
+    );
+CREATE TABLE api_peer_points_data(
+    login VARCHAR(255) PRIMARY KEY,
+    peer_review_points INT,
+    code_review_points INT,
+    coins INT);
+
+CREATE TABLE intensives(id int PRIMARY KEY, start_date date, end_date date);
 
 INSERT INTO INTENSIVES VALUES (1, '23-10-2023', '17-11-2023');
 INSERT INTO INTENSIVES VALUES (2, '21-10-2023', '15-22-2023');

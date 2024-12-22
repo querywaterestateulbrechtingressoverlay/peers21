@@ -20,11 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class DemoApplicationTests {
 	@Autowired
     private MockMvc mvc;
-
-	@Test
-	void contextLoads() {
-
-	}
 	@Test
 	void getPeers() throws Exception {
 	 mvc.perform(get("/api/peers")
