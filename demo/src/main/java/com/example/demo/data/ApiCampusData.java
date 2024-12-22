@@ -6,7 +6,6 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Table("api_campus_data")
 public record ApiCampusData(
-    @Id
     @Column("id")
     String id,
     @Column("short_name") String shortName,
