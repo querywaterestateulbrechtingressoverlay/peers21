@@ -1,23 +1,6 @@
-CREATE TABLE api_campuses (
-    id INT PRIMARY KEY,
-    short_name VARCHAR(255));
-CREATE TABLE api_peer_data(
-    id INT PRIMARY KEY,
-    login VARCHAR(255),
-    class_name VARCHAR(255),
-    parallel_name VARCHAR(255),
-    exp_value INT,
-    exp_to_next_level INT,
-    campus_id INT,
-    state VARCHAR(255),
-    FOREIGN KEY(id) REFERENCES api_peer_points_data(id),
-    FOREIGN KEY(campus_id) REFERENCES api_campuses(id)
-    );
-CREATE TABLE api_peer_points_data(
-    login VARCHAR(255) PRIMARY KEY,
-    peer_review_points INT,
-    code_review_points INT,
-    coins INT);
+CREATE TABLE api_campuses (id INT PRIMARY KEY, short_name VARCHAR(255));
+CREATE TABLE api_peer_data(id INT PRIMARY KEY, login VARCHAR(255), class_name VARCHAR(255), parallel_name VARCHAR(255), exp_value INT, exp_to_next_level INT, campus_id INT, state VARCHAR(255), FOREIGN KEY(id) REFERENCES api_peer_points_data(id), FOREIGN KEY(campus_id) REFERENCES api_campuses(id) );
+CREATE TABLE api_peer_points_data(login VARCHAR(255) PRIMARY KEY, peer_review_points INT, code_review_points INT, coins INT);
 
 CREATE TABLE intensives(id int PRIMARY KEY, start_date date, end_date date);
 
