@@ -1,7 +1,9 @@
 package com.example.demo;
 
-import com.example.demo.data.Peer;
+import com.example.demo.data.ApiPeerData;
+import com.example.demo.data.ApiPeerDataRepository;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import com.example.demo.scraper.ApiScraperService;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class ApiController {
 
     @Autowired
-    PeerRepository repo;
+    ApiPeerDataRepository repo;
 
     @Autowired
     ApiScraperService apiScraper;
@@ -25,16 +27,16 @@ public class ApiController {
     }
 
     @GetMapping("/peers")
-    List<Peer> getPeers() {
-        return repo.getAllPeers();
+    List<ApiPeerData> getPeers() {
+        return StreamSupport.stream(repo.findAll().spliterator(), false).toList();
     }
     @GetMapping("/peers/wave/{waveId}")
-    List<Peer> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
+    List<ApiPeerData> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
         return repo.findByWave(wave);
     }
 
     @GetMapping("/peers/{peerUsername}")
-    Peer getPeerById(@PathVariable @NotBlank String peerUsername) {
+    ApiPeerData getPeerById(@PathVariable @NotBlank String peerUsername) {
         return repo.findByName(peerUsername);
     }
 

@@ -8,4 +8,8 @@ import java.util.List;
 public interface ApiPeerDataRepository extends CrudRepository<ApiPeerData, Integer> {
   @Query("SELECT login FROM api_peer_data")
   List<String> getLogins();
+
+  ApiPeerData findByName(String peerUsername);
+
+  List<ApiPeerData> findByWave(int wave);
 }

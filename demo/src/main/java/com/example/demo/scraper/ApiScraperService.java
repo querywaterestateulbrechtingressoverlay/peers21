@@ -1,7 +1,6 @@
 package com.example.demo.scraper;
 
 import com.example.demo.data.*;
-import com.example.demo.data.Peer;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import io.github.bucket4j.Bucket;
 import org.slf4j.Logger;
@@ -130,13 +129,13 @@ public class ApiScraperService {
     return returnValue;
   }
 
-  List<ApiCampusData> listCampuses() {
-    logger.info("retrieving campus list...");
-    if (System.currentTimeMillis() >= keyExpiryDate) {
-      logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
-      updateApiKey();
-    }
-  }
+//  List<ApiCampusData> listCampuses() {
+//    logger.info("retrieving campus list...");
+//    if (System.currentTimeMillis() >= keyExpiryDate) {
+//      logger.info("API key is out of date, updating... (current timestamp is " + System.currentTimeMillis() + "), key expiry timestamp is " + keyExpiryDate);
+//      updateApiKey();
+//    }
+//  }
 
   @Scheduled(fixedRateString = "PT1M")
   public void updatePeerList() {
