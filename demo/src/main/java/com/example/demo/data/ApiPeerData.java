@@ -16,4 +16,4 @@ public record ApiPeerData(
     @Column("exp_value") String expValue,
     @Column("exp_to_next_level") String expToNextLevel,
     @Column("campus_id") String campusId,
-    PeerState state) {}
+    @Column("state") PeerState state) {}
