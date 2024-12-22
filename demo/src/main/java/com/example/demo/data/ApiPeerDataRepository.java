@@ -9,7 +9,7 @@ public interface ApiPeerDataRepository extends CrudRepository<ApiPeerData, Integ
   @Query("SELECT login FROM api_peer_data")
   List<String> getLogins();
 
-  ApiPeerData findByName(String peerUsername);
+  ApiPeerData findByLogin(String peerUsername);
 
-  List<ApiPeerData> findByWave(int wave);
+//  List<ApiPeerData> findByWave(int wave);
 }
