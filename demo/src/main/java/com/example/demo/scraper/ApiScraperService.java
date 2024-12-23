@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.stream.StreamSupport;
 
 @EnableScheduling
@@ -36,17 +35,26 @@ public class ApiScraperService {
       .rateLimit(2)
       .build();
 
-  public void getPeerFromCampus(ApiCampusData campus) {
+  public void getPeersFromCampus(ApiCampusData campus) {
     logger.info(campus.getId());
-    ParticipantLoginsDTO participantLogins = requestService.request(ParticipantLoginsDTO.class, "campuses/" + campus.getId() + "/participants?limit=20&offset=0");
-    logger.info(String.valueOf(participantLogins.participants().size()));
+    var participantLoginList = new ArrayList<String>();
+    int page = 0;
+    while (true) {
+      ParticipantLoginsDTO participantLogins = requestService.request(ParticipantLoginsDTO.class, "campuses/" + campus.getId() + "/participants?limit=50&offset=" + 50 * page++);
+      if (participantLogins.participants().isEmpty()) {
+        break;
+      } else {
+        participantLoginList.addAll(participantLogins.participants());
+      }
+    }
     var participantDTOs = new ArrayList<ParticipantDTO>();
-    for (String peerLogin : participantLogins.participants()) {
+    for (String peerLogin : participantLoginList) {
       logger.info(peerLogin);
       ParticipantDTO participant = requestService.request(ParticipantDTO.class, "participants/" + peerLogin);
       participantDTOs.add(participant);
     }
-    Iterable<ApiPeerData> ids = peerRepo.saveAll(participantDTOs.stream().map(ParticipantDTO::toTableForm).toList());
+    var active = participantDTOs.stream().filter((participant) -> participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN || participant.status() == PeerState.TEMPORARY_BLOCKING).toList();
+    Iterable<ApiPeerData> ids = peerRepo.saveAll(active.stream().map(ParticipantDTO::toTableForm).toList());
     for (ApiPeerData a : ids) {
       peerPointsRepo.save(new ApiPeerPointsData(null, 0, 0, 0));
     }

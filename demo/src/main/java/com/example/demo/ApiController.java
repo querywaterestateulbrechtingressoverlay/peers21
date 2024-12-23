@@ -16,39 +16,42 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api")
 public class ApiController {
 
-    @Autowired
-    ApiPeerDataRepository repo;
+  @Autowired
+  ApiPeerDataRepository repo;
 
-    @Autowired
-    ApiScraperService apiScraper;
-    @Autowired
-    ApiCampusDataRepository campusRepo;
+  @Autowired
+  ApiScraperService apiScraper;
+  @Autowired
+  ApiCampusDataRepository campusRepo;
 
-    @GetMapping("/")
-    void updateApi() {
-        apiScraper.updateCampuses();
-        ApiCampusData yakutsk = campusRepo.findByShortName("21 Yakutsk");
-        apiScraper.getPeerFromCampus(yakutsk);
-//        apiScraper.updatePeerList();
-    }
+  @GetMapping("/init")
+  void initDatabase() {
+    apiScraper.updateCampuses();
+    ApiCampusData yakutsk = campusRepo.findByShortName("21 Yakutsk");
+    apiScraper.getPeersFromCampus(yakutsk);
+  }
+  @GetMapping("/")
+  void updateApi() {
 
-    @GetMapping("/campuses")
-    List<ApiCampusData> getCampuses() {
-        return StreamSupport.stream(campusRepo.findAll().spliterator(), false).toList();
-    }
+  }
 
-    @GetMapping("/peers")
-    List<ApiPeerData> getPeers() {
-        return StreamSupport.stream(repo.findAll().spliterator(), false).toList();
-    }
+  @GetMapping("/campuses")
+  List<ApiCampusData> getCampuses() {
+    return StreamSupport.stream(campusRepo.findAll().spliterator(), false).toList();
+  }
+
+  @GetMapping("/peers")
+  List<ApiPeerData> getPeers() {
+    return StreamSupport.stream(repo.findAll().spliterator(), false).toList();
+  }
 //    @GetMapping("/peers/wave/{waveId}")
 //    List<ApiPeerData> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
 //        return repo.findByWave(wave);
 //    }
 
-    @GetMapping("/peers/{peerUsername}")
-    ApiPeerData getPeerById(@PathVariable @NotBlank String peerUsername) {
-        return repo.findByLogin(peerUsername);
-    }
+  @GetMapping("/peers/{peerUsername}")
+  ApiPeerData getPeerById(@PathVariable @NotBlank String peerUsername) {
+    return repo.findByLogin(peerUsername);
+  }
 
 }
