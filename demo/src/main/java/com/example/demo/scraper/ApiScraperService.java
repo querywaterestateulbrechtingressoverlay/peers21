@@ -1,15 +1,16 @@
 package com.example.demo.scraper;
 
 import com.example.demo.data.*;
-import com.example.demo.scraper.dto.ApiCampusesDTO;
-import com.example.demo.scraper.dto.ApiParticipantLoginsDTO;
+import com.example.demo.scraper.dto.ParticipantDTO;
+import com.example.demo.scraper.dto.CampusDTO;
+import com.example.demo.scraper.dto.ParticipantLoginsDTO;
+import com.example.demo.scraper.dto.ParticipantPointsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,20 +26,36 @@ public class ApiScraperService {
   ApiPeerPointsDataRepository peerPointsRepo;
   @Autowired
   ApiCampusDataRepository campusRepo;
-  @Autowired
-  ApiRequestService requestService;
+
+  ApiRequestService requestService = ApiRequestService
+      .getBuilder()
+      .apiBaseUrl("https://edu-api.21-school.ru/services/21-school/api/v1/")
+      .tokenEndpointUrl("https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token")
+      .envUsernameVariable("API_USERNAME")
+      .envPasswordVariable("API_PASSWORD")
+      .rateLimit(2)
+      .build();
 
   public void getPeerFromCampus(ApiCampusData campus) {
-    ApiParticipantLoginsDTO participantLogins = requestService.request(ApiParticipantLoginsDTO.class, "campuses/" + campus.getId() + "/participants?limit=1000&offset=0");
+    logger.info(campus.getId());
+    ParticipantLoginsDTO participantLogins = requestService.request(ParticipantLoginsDTO.class, "campuses/" + campus.getId() + "/participants?limit=20&offset=0");
+    logger.info(String.valueOf(participantLogins.participants().size()));
+    var participantDTOs = new ArrayList<ParticipantDTO>();
     for (String peerLogin : participantLogins.participants()) {
-
+      logger.info(peerLogin);
+      ParticipantDTO participant = requestService.request(ParticipantDTO.class, "participants/" + peerLogin);
+      participantDTOs.add(participant);
+    }
+    Iterable<ApiPeerData> ids = peerRepo.saveAll(participantDTOs.stream().map(ParticipantDTO::toTableForm).toList());
+    for (ApiPeerData a : ids) {
+      peerPointsRepo.save(new ApiPeerPointsData(null, 0, 0, 0));
     }
   }
 
 
   public void updateCampuses() {
     logger.info("retrieving campus list...");
-    campusRepo.saveAll(requestService.request(ApiCampusesDTO.class, "/campuses").campuses());
+    campusRepo.saveAll(requestService.request(CampusDTO.class, "/campuses").campuses());
   }
 
   @Scheduled(fixedRateString = "PT1M")
@@ -49,21 +66,14 @@ public class ApiScraperService {
     var changedPeerData = new ArrayList<ApiPeerData>();
     var changedPeerPointsData = new ArrayList<ApiPeerPointsData>();
 
-
-    var peerFutures = new ArrayList<CompletableFuture<Void>>();
-    try (ExecutorService rateLimitedExecutor = Executors.newFixedThreadPool(3)) {
-      for (ApiPeerData peer : peerList) {
-        CompletableFuture<Void> asd = CompletableFuture.supplyAsync(() -> {
-          logger.info("peer " + peer.login());
-          ApiPeerData peerResponse = requestService.request(ApiPeerData.class, "/participants/" + peer.login());
-          ApiPeerPointsData peerPointsResponse = requestService.request(ApiPeerPointsData.class, "/participants/" + peer.login() + "/points");
-          changedPeerData.add(peerResponse);
-          changedPeerPointsData.add(peerPointsResponse);
-          return null;
-          }, rateLimitedExecutor);
-        peerFutures.add(asd);
-      }
-      peerFutures.forEach(CompletableFuture::join);
+    for (ApiPeerData peer : peerList) {
+      logger.info("peer {}", peer.login());
+      ParticipantDTO peerResponse;
+      ParticipantPointsDTO peerPointsDTO;
+      peerResponse = requestService.request(ParticipantDTO.class, "/participants/" + peer.login());
+      peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
+      changedPeerData.add(peerResponse.toTableForm(peer.id()));
+      changedPeerPointsData.add(peerPointsDTO.toTableForm(peer.id()));
     }
     if (!(changedPeerData.isEmpty() && changedPeerPointsData.isEmpty())) {
       peerRepo.saveAll(changedPeerData);
