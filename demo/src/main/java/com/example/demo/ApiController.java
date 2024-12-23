@@ -27,9 +27,9 @@ public class ApiController {
     @GetMapping("/")
     void updateApi() {
         apiScraper.updateCampuses();
-        apiScraper.updateApiKey();
-        apiScraper.updatePeerList();
-        apiScraper.getPeers(ApiCampusData);
+        ApiCampusData yakutsk = campusRepo.findByShortName("21 Yakutsk");
+        apiScraper.getPeerFromCampus(yakutsk);
+//        apiScraper.updatePeerList();
     }
 
     @GetMapping("/campuses")

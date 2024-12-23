@@ -1,5 +1,6 @@
 package com.example.demo.data;
 
+import com.example.demo.scraper.dto.ParticipantCampusDTO;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -8,7 +9,7 @@ import org.springframework.data.relational.core.mapping.Table;
 public record ApiPeerData(
     @Id
     @Column("id")
-    int id,
+    Integer id,
     @Column("login")
     String login,
     @Column("class_name") String className,
