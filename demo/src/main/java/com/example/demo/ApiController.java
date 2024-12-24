@@ -44,10 +44,10 @@ public class ApiController {
   List<ApiPeerData> getPeers() {
     return StreamSupport.stream(repo.findAll().spliterator(), false).toList();
   }
-//    @GetMapping("/peers/wave/{waveId}")
-//    List<ApiPeerData> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
-//        return repo.findByWave(wave);
-//    }
+//  @GetMapping("/peers/wave/{waveId}")
+//  List<ApiPeerData> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
+//    return repo.findByWave(wave);
+//  }
 
   @GetMapping("/peers/{peerUsername}")
   ApiPeerData getPeerById(@PathVariable @NotBlank String peerUsername) {
