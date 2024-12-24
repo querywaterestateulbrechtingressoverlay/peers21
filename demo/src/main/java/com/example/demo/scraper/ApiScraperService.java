@@ -25,16 +25,8 @@ public class ApiScraperService {
   ApiPeerPointsDataRepository peerPointsRepo;
   @Autowired
   ApiCampusDataRepository campusRepo;
-
-  ApiRequestService requestService = ApiRequestService
-      .getBuilder()
-      .apiBaseUrl("https://edu-api.21-school.ru/services/21-school/api/v1/")
-      .tokenEndpointUrl("https://auth.sberclass.ru/auth/realms/EduPowerKeycloak/protocol/openid-connect/token")
-      .envUsernameVariable("API_USERNAME")
-      .envPasswordVariable("API_PASSWORD")
-      .rateLimit(2)
-      .build();
-
+  @Autowired
+  ApiRequestService requestService;
   public void getPeersFromCampus(ApiCampusData campus) {
     logger.info(campus.getId());
     var participantLoginList = new ArrayList<String>();
@@ -53,7 +45,7 @@ public class ApiScraperService {
       ParticipantDTO participant = requestService.request(ParticipantDTO.class, "participants/" + peerLogin);
       participantDTOs.add(participant);
     }
-    var active = participantDTOs.stream().filter((participant) -> participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN || participant.status() == PeerState.TEMPORARY_BLOCKING).toList();
+    var active = participantDTOs.stream().filter((participant) -> participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN).toList();
     Iterable<ApiPeerData> ids = peerRepo.saveAll(active.stream().map(ParticipantDTO::toTableForm).toList());
     for (ApiPeerData a : ids) {
       peerPointsRepo.save(new ApiPeerPointsData(null, 0, 0, 0));
