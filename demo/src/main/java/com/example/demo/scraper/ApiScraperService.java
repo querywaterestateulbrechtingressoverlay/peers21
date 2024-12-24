@@ -66,7 +66,7 @@ public class ApiScraperService {
     campusRepo.saveAll(requestService.request(CampusDTO.class, "/campuses").campuses());
   }
 
-  @Scheduled(fixedRateString = "PT1M")
+  @Scheduled(fixedRateString = "PT15M")
   public void updatePeerList() {
     logger.info("updating peer info...");
     var peerList = StreamSupport.stream(peerRepo.findAll().spliterator(), true).toList();

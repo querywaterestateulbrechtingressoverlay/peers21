@@ -19,6 +19,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.Instant;
@@ -139,14 +140,6 @@ public class ApiRequestService {
       }
     }
   }
-  @Retryable(maxAttempts = 10, retryFor = HttpClientErrorException.class)
-  <T> T actualRequest(Class<T> responseClass, String apiUrl) {
-    return apiReqClient.get()
-        .uri(apiUrl)
-        .accept(MediaType.APPLICATION_JSON)
-        .retrieve()
-        .body(responseClass);
-  }
   <T> T request(Class<T> responseClass, String apiUrl) {
     AtomicBoolean tooManyRequests = new AtomicBoolean(false);
     updateApiKey();
@@ -156,6 +149,8 @@ public class ApiRequestService {
           RetryTemplate template = RetryTemplate.builder()
               .maxAttempts(10)
               .retryOn(HttpClientErrorException.class)
+              .retryOn(IOException.class)
+              .retryOn(org.springframework.web.client.ResourceAccessException.class)
               .build();
           return template.execute(ctx -> apiReqClient.get()
               .uri(apiUrl)
