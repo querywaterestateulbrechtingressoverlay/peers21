@@ -5,11 +5,11 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface ApiPeerDataRepository extends CrudRepository<ApiPeerData, Integer> {
-  @Query("SELECT login FROM api_peer_data")
+public interface PeerDataRepository extends CrudRepository<PeerData, Integer> {
+  @Query("SELECT login FROM peer_data")
   List<String> getLogins();
 
-  ApiPeerData findByLogin(String peerUsername);
+  PeerData findByLogin(String peerUsername);
 
 //  List<ApiPeerData> findByWave(int wave);
 }

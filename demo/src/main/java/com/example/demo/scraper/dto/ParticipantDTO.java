@@ -1,6 +1,6 @@
 package com.example.demo.scraper.dto;
 
-import com.example.demo.data.ApiPeerData;
+import com.example.demo.data.PeerData;
 import com.example.demo.data.PeerState;
 
 public record ParticipantDTO(
@@ -11,10 +11,4 @@ public record ParticipantDTO(
     String expToNextLevel,
     ParticipantCampusDTO campus,
     PeerState status) {
-    public ApiPeerData toTableForm() {
-        return new ApiPeerData(null, login, className, parallelName, expValue, expToNextLevel, campus.id(), status);
-    }
-    public ApiPeerData toTableForm(int id) {
-        return new ApiPeerData(id, login, className, parallelName, expValue, expToNextLevel, campus.id(), status);
-    }
 }
