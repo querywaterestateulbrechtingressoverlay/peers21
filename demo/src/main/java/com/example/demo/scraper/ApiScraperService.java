@@ -20,9 +20,7 @@ import java.util.stream.StreamSupport;
 public class ApiScraperService {
   Logger logger = LoggerFactory.getLogger(ApiScraperService.class);
   @Autowired
-  ApiPeerDataRepository peerRepo;
-  @Autowired
-  ApiPeerPointsDataRepository peerPointsRepo;
+  PeerDataRepository peerRepo;
   @Autowired
   ApiCampusDataRepository campusRepo;
   @Autowired
@@ -46,10 +44,7 @@ public class ApiScraperService {
       participantDTOs.add(participant);
     }
     var active = participantDTOs.stream().filter((participant) -> participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN).toList();
-    Iterable<ApiPeerData> ids = peerRepo.saveAll(active.stream().map(ParticipantDTO::toTableForm).toList());
-    for (ApiPeerData a : ids) {
-      peerPointsRepo.save(new ApiPeerPointsData(null, 0, 0, 0));
-    }
+    Iterable<PeerData> ids = peerRepo.saveAll(active.stream().map(PeerData::createFromDTO).toList());
   }
 
 
@@ -64,21 +59,18 @@ public class ApiScraperService {
     logger.info("updating peer info...");
     var peerList = StreamSupport.stream(peerRepo.findAll().spliterator(), true).toList();
 
-    var changedPeerData = new ArrayList<ApiPeerData>();
-    var changedPeerPointsData = new ArrayList<ApiPeerPointsData>();
+    var changedPeerData = new ArrayList<PeerData>();
 
-    for (ApiPeerData peer : peerList) {
+    for (PeerData peer : peerList) {
       logger.info("peer {}", peer.login());
       ParticipantDTO peerResponse;
       ParticipantPointsDTO peerPointsDTO;
       peerResponse = requestService.request(ParticipantDTO.class, "/participants/" + peer.login());
       peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
-      changedPeerData.add(peerResponse.toTableForm(peer.id()));
-      changedPeerPointsData.add(peerPointsDTO.toTableForm(peer.id()));
+      changedPeerData.add(PeerData.updateFromDTO(peer.id(), peerResponse, peerPointsDTO));
     }
-    if (!(changedPeerData.isEmpty() && changedPeerPointsData.isEmpty())) {
+    if (!(changedPeerData.isEmpty())) {
       peerRepo.saveAll(changedPeerData);
-      peerPointsRepo.saveAll(changedPeerPointsData);
       logger.info("update finished");
     } else {
       logger.info("no peers were updated");
