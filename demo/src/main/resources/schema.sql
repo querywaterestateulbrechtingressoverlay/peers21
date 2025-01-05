@@ -1,7 +1,6 @@
 CREATE TABLE api_campus_data (id VARCHAR(255) PRIMARY KEY, short_name VARCHAR(255), full_name VARCHAR(255));
 CREATE TABLE intensives(id int PRIMARY KEY, start_date date, end_date date);
 CREATE TABLE peer_data(id INT PRIMARY KEY AUTO_INCREMENT, login VARCHAR(255) UNIQUE, intensive INT, exp_value INT, state VARCHAR(255), peer_review_points INT, code_review_points INT, coins INT, FOREIGN KEY (intensive) REFERENCES intensives(id));
-CREATE TABLE
 
 INSERT INTO intensives VALUES (1, '2023-10-23', '2023-11-17');
 INSERT INTO intensives VALUES (2, '2023-11-21', '2023-12-15');
