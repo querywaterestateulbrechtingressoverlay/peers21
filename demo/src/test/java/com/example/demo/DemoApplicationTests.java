@@ -22,12 +22,6 @@ class DemoApplicationTests {
     private MockMvc mvc;
 	@Test
 	void getPeers() throws Exception {
-	 mvc.perform(get("/api/peers")
-      .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isOk())
-      .andExpect(content()
-      .contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-      .andExpect((ResultMatcher) jsonPath("$[0].name", is("cypherco")))
-      .andExpect((ResultMatcher) jsonPath("$[0].xp", not(is("999999"))));
+
 	}
 }

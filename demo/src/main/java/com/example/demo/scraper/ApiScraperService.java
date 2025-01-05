@@ -1,10 +1,7 @@
 package com.example.demo.scraper;
 
 import com.example.demo.data.*;
-import com.example.demo.scraper.dto.ParticipantDTO;
-import com.example.demo.scraper.dto.CampusDTO;
-import com.example.demo.scraper.dto.ParticipantLoginsDTO;
-import com.example.demo.scraper.dto.ParticipantPointsDTO;
+import com.example.demo.scraper.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +22,8 @@ public class ApiScraperService {
   ApiCampusDataRepository campusRepo;
   @Autowired
   ApiRequestService requestService;
+  @Autowired
+  IntensiveDatesRepository intensiveDatesRepository;
   public void getPeersFromCampus(ApiCampusData campus) {
     logger.info(campus.getId());
     var participantLoginList = new ArrayList<String>();
@@ -37,14 +36,20 @@ public class ApiScraperService {
         participantLoginList.addAll(participantLogins.participants());
       }
     }
-    var participantDTOs = new ArrayList<ParticipantDTO>();
+    var parsedPeerData = new ArrayList<PeerData>();
     for (String peerLogin : participantLoginList) {
       logger.info(peerLogin);
       ParticipantDTO participant = requestService.request(ParticipantDTO.class, "participants/" + peerLogin);
-      participantDTOs.add(participant);
+      if (participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN) {
+        ParticipantXpHistoryDTO xpHistory = requestService.request(ParticipantXpHistoryDTO.class, "participants/" + peerLogin + "/experience-history");
+        Integer participantIntensive = 0;
+        if (!xpHistory.expHistory().isEmpty()) {
+          participantIntensive = intensiveDatesRepository.findIntensiveByFirstXpAccrualDate(xpHistory.expHistory().getLast().accrualDateTime());
+        }
+        parsedPeerData.add(PeerData.createFromDTO(participant, participantIntensive));
+      }
     }
-    var active = participantDTOs.stream().filter((participant) -> participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN).toList();
-    Iterable<PeerData> ids = peerRepo.saveAll(active.stream().map(PeerData::createFromDTO).toList());
+    peerRepo.saveAll(parsedPeerData);
   }
 
 
@@ -67,7 +72,7 @@ public class ApiScraperService {
       ParticipantPointsDTO peerPointsDTO;
       peerResponse = requestService.request(ParticipantDTO.class, "/participants/" + peer.login());
       peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
-      changedPeerData.add(PeerData.updateFromDTO(peer.id(), peerResponse, peerPointsDTO));
+      changedPeerData.add(PeerData.updateFromDTO(peer, peerResponse, peerPointsDTO));
     }
     if (!(changedPeerData.isEmpty())) {
       peerRepo.saveAll(changedPeerData);

@@ -12,4 +12,4 @@ public record ApiKeyResponse(@JsonProperty("access_token") String accessToken,
                              String notBeforePolicy,
                              @JsonProperty("session_state")
                              String sessionState,
-                             String scope) {};
+                             String scope) {}
