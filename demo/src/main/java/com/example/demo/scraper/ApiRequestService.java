@@ -115,7 +115,7 @@ public class ApiRequestService {
               .retryOn(IOException.class)
               .retryOn(org.springframework.web.client.ResourceAccessException.class)
               .build();
-          return template.execute(ctx -> apiReqClient.get()
+          return template.execute(_ -> apiReqClient.get()
               .uri(apiUrl)
               .accept(MediaType.APPLICATION_JSON)
               .retrieve()
