@@ -64,13 +64,23 @@ public class ApiScraperService {
     return requestService.request(CampusDTO.class, "/campuses").campuses();
   }
 
-//  public List<ApiTribeData> getTribes() {
-//
-//  }
-//
-//  public List<ApiTribeParticipants> getTribeParticipants() {
-//
-//  }
+  public List<TribeData> getTribes(ApiCampusData campus) {
+    return requestService
+      .request(CoalitionsDTO.class, "/campuses/" + campus.getId() + "/coalitions")
+      .coalitions()
+      .stream()
+      .map((dto) -> new TribeData(dto.coalitionId(), dto.name()))
+      .toList();
+  }
+
+  public List<TribeParticipantData> getTribeParticipants(TribeData tribe) {
+    return requestService
+      .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.id() + "/participants")
+      .participants()
+      .stream()
+      .map((peerLogin) -> new TribeParticipantData(null, tribe.id(), peerLogin))
+      .toList();
+  }
 
   @Scheduled(fixedRateString = "PT15M")
   public void updatePeerList() {
