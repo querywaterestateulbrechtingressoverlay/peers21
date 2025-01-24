@@ -24,18 +24,18 @@ public class ApiScraperService {
   ApiRequestService requestService;
   @Autowired
   IntensiveDatesRepository intensiveDatesRepository;
-  public void getPeersFromCampus(ApiCampusData campus) {
+  public List<PeerData> getPeersFromCampus(ApiCampusData campus) {
     logger.info(campus.getId());
     var participantLoginList = new ArrayList<String>();
     int page = 0;
-    while (true) {
+//    while (true) {
       ParticipantLoginsDTO participantLogins = requestService.request(ParticipantLoginsDTO.class, "campuses/" + campus.getId() + "/participants?limit=50&offset=" + 50 * page++);
-      if (participantLogins.participants().isEmpty()) {
-        break;
-      } else {
+//      if (participantLogins.participants().isEmpty()) {
+//        break;
+//      } else {
         participantLoginList.addAll(participantLogins.participants());
-      }
-    }
+//      }
+//    }
     var parsedPeerData = new ArrayList<PeerData>();
     for (String peerLogin : participantLoginList) {
       logger.info(peerLogin);
@@ -49,22 +49,34 @@ public class ApiScraperService {
         parsedPeerData.add(PeerData.createFromDTO(participant, participantIntensive));
       }
     }
-    peerRepo.saveAll(parsedPeerData);
+    return parsedPeerData;
   }
 
+  public void initApplication() {
+    campusRepo.saveAll(getCampuses());
+    ApiCampusData ykt = campusRepo.findByShortName("21 Yakutsk");
+    peerRepo.saveAll(getPeersFromCampus(ykt));
+    logger.info("application initialized");
+  }
 
-  public void updateCampuses() {
+  public List<ApiCampusData> getCampuses() {
     logger.info("retrieving campus list...");
-    campusRepo.saveAll(requestService.request(CampusDTO.class, "/campuses").campuses());
+    return requestService.request(CampusDTO.class, "/campuses").campuses();
   }
+
+//  public List<ApiTribeData> getTribes() {
+//
+//  }
+//
+//  public List<ApiTribeParticipants> getTribeParticipants() {
+//
+//  }
 
   @Scheduled(fixedRateString = "PT15M")
   public void updatePeerList() {
     logger.info("updating peer info...");
     var peerList = StreamSupport.stream(peerRepo.findAll().spliterator(), true).toList();
-
     var changedPeerData = new ArrayList<PeerData>();
-
     for (PeerData peer : peerList) {
       logger.info("peer {}", peer.login());
       ParticipantDTO peerResponse;
@@ -73,11 +85,7 @@ public class ApiScraperService {
       peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
       changedPeerData.add(PeerData.updateFromDTO(peer, peerResponse, peerPointsDTO));
     }
-    if (!(changedPeerData.isEmpty())) {
-      peerRepo.saveAll(changedPeerData);
-      logger.info("update finished");
-    } else {
-      logger.info("no peers were updated");
-    }
+    peerRepo.saveAll(changedPeerData);
+    logger.info("update finished, updated {} peers", changedPeerData.size());
   }
 }
