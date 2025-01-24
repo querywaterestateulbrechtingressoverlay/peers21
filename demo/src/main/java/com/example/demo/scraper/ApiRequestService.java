@@ -39,8 +39,12 @@ public class ApiRequestService {
   @Autowired
   private RestClient.Builder restClientBuilder;
 
+  void rebuildClient() {
+    apiClient = restClientBuilder.build();
+  }
+
   @Autowired
-  ApiRequestService(ApiRequestServiceProperties properties, RestClient.Builder apiClientBuilder) {
+  ApiRequestService(ApiRequestServiceProperties properties) {
     this.tokenEndpointUrl = properties.tokenEndpointUrl();
     boolean error = false;
     logger.info("retrieving API username from environment variables...");
@@ -68,8 +72,6 @@ public class ApiRequestService {
         .refillGreedy(properties.rateLimit(), Duration.ofSeconds(1)))
       .build();
     apiBaseUrl = properties.apiBaseUrl();
-    apiClient = apiClientBuilder
-        .build();
     requestExecutor = Executors.newFixedThreadPool(properties.rateLimit());
   }
   public void updateApiKey() {
@@ -94,6 +96,7 @@ public class ApiRequestService {
         )
           .body(ApiKeyResponse.class);
       if (keyEntity != null) {
+        rebuildClient();
         keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
         logger.info("successfully updated API key, new key expiry date = {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
         apiClient = apiClient.mutate().defaultHeader("Authorization", "Bearer " + keyEntity.accessToken()).build();
@@ -102,6 +105,7 @@ public class ApiRequestService {
   }
   public <T> T request(Class<T> responseClass, String apiUrl) {
     updateApiKey();
+    rebuildClient();
     Future<T> f = requestExecutor.submit(() -> {
       while (true) {
         if (reqBucket.tryConsume(1)) {
