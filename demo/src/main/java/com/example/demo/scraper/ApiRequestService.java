@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -40,7 +39,9 @@ public class ApiRequestService {
   private RestClient.Builder restClientBuilder;
 
   void rebuildClient() {
-    apiClient = restClientBuilder.build();
+    if (apiClient == null) {
+      apiClient = restClientBuilder.build();
+    }
   }
 
   @Autowired

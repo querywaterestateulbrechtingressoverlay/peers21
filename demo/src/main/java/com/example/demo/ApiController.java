@@ -26,13 +26,7 @@ public class ApiController {
 
   @GetMapping("/init")
   void initDatabase() {
-    apiScraper.updateCampuses();
-    ApiCampusData yakutsk = campusRepo.findByShortName("21 Yakutsk");
-    apiScraper.getPeersFromCampus(yakutsk);
-  }
-  @GetMapping("/")
-  void updateApi() {
-
+    apiScraper.initApplication();
   }
 
   @GetMapping("/campuses")
@@ -44,10 +38,6 @@ public class ApiController {
   List<PeerData> getPeers() {
     return StreamSupport.stream(repo.findAll().spliterator(), false).toList();
   }
-//  @GetMapping("/peers/wave/{waveId}")
-//  List<ApiPeerData> getPeersByWave(@PathVariable("waveId") @NotBlank int wave) {
-//    return repo.findByWave(wave);
-//  }
 
   @GetMapping("/peers/{peerUsername}")
   PeerData getPeerById(@PathVariable @NotBlank String peerUsername) {

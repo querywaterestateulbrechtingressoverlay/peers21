@@ -96,8 +96,6 @@ public class ApiRequestTests {
       .andRespond(withSuccess(objMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
     mockServer
       .expect(requestTo(new URI(properties.apiBaseUrl() + "/campus")))
-//      .andExpect(header("Authorization", "Bearer " + tokenResponse.accessToken()))
-//      .andExpect(method(HttpMethod.GET))
       .andRespond(withSuccess(objMapper.writeValueAsString(testResponse), MediaType.APPLICATION_JSON));
     requestService.request(ApiCampusData.class, "/campus");
     mockServer.verify();
