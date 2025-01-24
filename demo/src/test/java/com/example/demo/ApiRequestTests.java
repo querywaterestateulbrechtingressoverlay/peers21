@@ -1,32 +1,36 @@
 package com.example.demo;
 
+import com.example.demo.data.ApiCampusData;
 import com.example.demo.scraper.ApiRequestService;
 import com.example.demo.scraper.ApiRequestServiceProperties;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Random;
 
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-@SpringBootTest(classes = ApiRequestService.class)
+@SpringBootTest(classes = {ApiRequestService.class})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ApiRequestTests {
-
   @Autowired
   ApiRequestService requestService;
   @TestBean
@@ -39,19 +43,34 @@ public class ApiRequestTests {
         "API_PASSWORD",
         3);
   }
-  RestTemplate restTemplate = new RestTemplate();
-  MockRestServiceServer mockServer = MockRestServiceServer.bindTo(restTemplate).build();
+  @TestBean
+  private RestClient.Builder apiReqClientBuilder;
+  static RestClient.Builder apiReqClientBuilder() {
+    return RestClient.builder();
+  }
+
+  MockRestServiceServer mockServer;
+
   ObjectMapper objMapper = new ObjectMapper();
+  ApiKeyResponse tokenResponse = new ApiKeyResponse(
+      "cooltoken",
+      10, 10,
+      "anothercooltoken",
+      "Bearer", "1",
+      "qwerty", "profile email");
+
+  @BeforeAll
+  void setup() {
+    mockServer = MockRestServiceServer.bindTo(apiReqClientBuilder).build();
+  }
+
+  @BeforeEach
+  void reset() {
+    mockServer.reset();
+  }
 
   @Test
   void testApiTokenRequest() {
-    Random rng = new Random();
-    ApiKeyResponse fastExpiryMockKey = new ApiKeyResponse(
-        "cooltoken" + rng.nextInt(),
-        10, 10,
-        "anothercooltoken" + rng.nextInt(),
-        "Bearer", "1",
-        "qwerty", "profile email");
     MultiValueMap<String, String> expectedPostRequest = new LinkedMultiValueMap<>();
     expectedPostRequest.add("client_id", "s21-open-api");
     expectedPostRequest.add("username", System.getenv(properties.envUsernameVariable()));
@@ -63,12 +82,37 @@ public class ApiRequestTests {
         .andExpect(method(HttpMethod.POST))
         .andExpect(header("Content-Type", "application/x-www-form-urlencoded"))
         .andExpect(content().formData(expectedPostRequest))
-        .andRespond(withSuccess(objMapper.writeValueAsString(fastExpiryMockKey), MediaType.APPLICATION_JSON));
-    } catch (JsonProcessingException ignored) {
-
-    } catch (URISyntaxException e) {
+        .andRespond(withSuccess(objMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
+      requestService.updateApiKey();
+      mockServer.verify();
+    } catch (JsonProcessingException | URISyntaxException ignored) {
 
     }
-    requestService.updateApiKey();
+  }
+  @Test
+  void testSimpleApiRequest() {
+    MultiValueMap<String, String> expectedPostRequest = new LinkedMultiValueMap<>();
+    expectedPostRequest.add("client_id", "s21-open-api");
+    expectedPostRequest.add("username", System.getenv(properties.envUsernameVariable()));
+    expectedPostRequest.add("password", System.getenv(properties.envPasswordVariable()));
+    expectedPostRequest.add("grant_type", "password");
+    ApiCampusData testResponse = new ApiCampusData("cool-id", "ykt", "yakutsk");
+    try {
+      mockServer
+          .expect(requestTo(new URI(properties.tokenEndpointUrl())))
+          .andExpect(method(HttpMethod.POST))
+          .andExpect(header("Content-Type", "application/x-www-form-urlencoded"))
+          .andExpect(content().formData(expectedPostRequest))
+          .andRespond(withSuccess(objMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
+      mockServer
+          .expect(requestTo(new URI(properties.apiBaseUrl() + "/campus")))
+          .andExpect(header("Authorization", "Bearer " + tokenResponse.accessToken()))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withSuccess(objMapper.writeValueAsString(testResponse), MediaType.APPLICATION_JSON));
+      requestService.request(ApiCampusData.class, "/campus");
+      mockServer.verify();
+    } catch (JsonProcessingException | URISyntaxException ignored) {
+
+    }
   }
 }
