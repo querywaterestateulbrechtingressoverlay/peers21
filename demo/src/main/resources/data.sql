@@ -6,3 +6,15 @@ INSERT INTO intensives VALUES (5, '2024-06-24', '2024-07-19');
 INSERT INTO intensives VALUES (6, '2024-08-19', '2024-09-13');
 INSERT INTO intensives VALUES (7, '2024-09-30', '2024-10-25');
 INSERT INTO intensives VALUES (0, '1970-01-01', '1970-01-01');
+
+INSERT INTO api_campus_data VALUES ('abc', 'ykt', 'Yakutsk');
+INSERT INTO peer_data VALUES (1, 'gaben0', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (2, 'gaben1', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (3, 'gaben2', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (4, 'gaben3', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (5, 'gaben4', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (6, 'gaben5', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (7, 'gaben6', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO peer_data VALUES (8, 'gaben7', 1, 100, 'ACTIVE', 3, 3, 333);
+INSERT INTO tribe_data VALUES (0, 'valve');
+INSERT INTO tribe_data VALUES (1, 'volvo');
