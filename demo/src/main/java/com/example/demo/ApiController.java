@@ -43,5 +43,4 @@ public class ApiController {
   PeerData getPeerById(@PathVariable @NotBlank String peerUsername) {
     return repo.findByLogin(peerUsername);
   }
-
 }

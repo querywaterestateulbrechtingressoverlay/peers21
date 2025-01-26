@@ -19,11 +19,15 @@
                         <thead>
                             <tr>
                                 <th>Login</th>
+                                <th>Exp</th>
+                                <th>PRP</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="user : ${users}">
                                 <td th:text="${user.login}"></td>
+                                <td th:text="${user.expValue}"></td>
+                                <td th:text="${user.peerReviewPoints}"></td>
                             </tr>
                         </tbody>
                     </table>
