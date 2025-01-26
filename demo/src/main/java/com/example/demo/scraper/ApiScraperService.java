@@ -28,14 +28,14 @@ public class ApiScraperService {
     logger.info(campus.getId());
     var participantLoginList = new ArrayList<String>();
     int page = 0;
-//    while (true) {
+    while (true) {
       ParticipantLoginsDTO participantLogins = requestService.request(ParticipantLoginsDTO.class, "campuses/" + campus.getId() + "/participants?limit=50&offset=" + 50 * page++);
-//      if (participantLogins.participants().isEmpty()) {
-//        break;
-//      } else {
+      if (participantLogins.participants().isEmpty()) {
+        break;
+      } else {
         participantLoginList.addAll(participantLogins.participants());
-//      }
-//    }
+      }
+    }
     var parsedPeerData = new ArrayList<PeerData>();
     for (String peerLogin : participantLoginList) {
       logger.info(peerLogin);
