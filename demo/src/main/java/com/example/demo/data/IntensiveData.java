@@ -6,8 +6,8 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Date;
 
-@Table("intensives")
-public record IntensiveDates(
+@Table("intensive_data")
+public record IntensiveData(
   @Id
   @Column("id")
   Integer id,
