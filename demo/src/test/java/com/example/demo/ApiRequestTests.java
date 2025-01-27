@@ -1,12 +1,10 @@
 package com.example.demo;
 
-import com.example.demo.data.ApiCampusData;
 import com.example.demo.scraper.ApiRequestService;
 import com.example.demo.scraper.ApiRequestServiceProperties;
 import com.example.demo.scraper.dto.ApiKeyResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

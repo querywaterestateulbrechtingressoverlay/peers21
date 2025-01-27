@@ -5,7 +5,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Date;
 
-public interface IntensiveDatesRepository extends CrudRepository<IntensiveDates, Integer> {
-  @Query("SELECT COALESCE((SELECT id FROM intensives WHERE :firstXpAccrualDate BETWEEN start_date AND end_date), 0)")
+public interface IntensiveDataRepository extends CrudRepository<IntensiveData, Integer> {
+  @Query("SELECT COALESCE((SELECT id FROM intensive_data WHERE :firstXpAccrualDate BETWEEN start_date AND end_date), 0)")
   Integer findIntensiveByFirstXpAccrualDate(Date firstXpAccrualDate);
 }
