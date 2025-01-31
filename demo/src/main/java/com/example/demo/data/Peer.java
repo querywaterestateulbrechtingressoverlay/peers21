@@ -1,6 +1,7 @@
 package com.example.demo.data;
 
 import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.MappedCollection;
 
 public record Peer(String login,
                    String wave,
