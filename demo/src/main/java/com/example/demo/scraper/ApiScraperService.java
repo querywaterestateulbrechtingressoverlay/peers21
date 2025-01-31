@@ -108,7 +108,7 @@ public class ApiScraperService {
         int intensive = getPeerIntensive(a.getKey());
         peerBaseDataRepo.save(
             new PeerBaseData(
-                null, peer.login(), peer.className(), intensive, a.getValue()
+                null, peer.login(), peer.className(), intensive, a.getValue(), null
             )
         );
       }
@@ -126,7 +126,7 @@ public class ApiScraperService {
       logger.info("peer {}", peer.login());
       ParticipantDTO peerResponse = requestService.request(ParticipantDTO.class, "/participants/" + peer.login());
       ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
-      changedPeerData.add(PeerMutableData.updateFromDTO(peer.id(), 0, peerResponse, peerPointsDTO));
+      changedPeerData.add(PeerMutableData.updateFromDTO(peer.peerMutableData().id(), peer.peerMutableData().peerId(), 0, peerResponse, peerPointsDTO));
     }
     peerMutableDataRepo.saveAll(changedPeerData);
     logger.info("update finished, updated {} peers", changedPeerData.size());

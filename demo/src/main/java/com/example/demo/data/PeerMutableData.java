@@ -26,7 +26,7 @@ public record PeerMutableData(
     @Column("coins")
     int coins
 ) {
-    static public PeerMutableData updateFromDTO(int id, int tribePoints, ParticipantDTO participantDTO, ParticipantPointsDTO participantPointsDTO) {
-        return new PeerMutableData(null, id, participantDTO.status(), tribePoints, participantDTO.expValue(), participantPointsDTO.peerReviewPoints(), participantPointsDTO.codeReviewPoints(), participantPointsDTO.coins());
+    static public PeerMutableData updateFromDTO(Integer id, int peer_id, int tribePoints, ParticipantDTO participantDTO, ParticipantPointsDTO participantPointsDTO) {
+        return new PeerMutableData(id, peer_id, participantDTO.status(), tribePoints, participantDTO.expValue(), participantPointsDTO.peerReviewPoints(), participantPointsDTO.codeReviewPoints(), participantPointsDTO.coins());
     }
 }
