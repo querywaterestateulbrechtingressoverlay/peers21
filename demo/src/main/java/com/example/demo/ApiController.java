@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 
 import com.example.demo.data.Peer;
+import com.example.demo.data.PeerBaseData;
 import com.example.demo.data.PeerBaseDataRepository;
 import com.example.demo.data.PeerMutableDataRepository;
 import com.example.demo.scraper.ApiScraperService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,48 +33,24 @@ public class ApiController {
     apiScraper.initPeerList();
   }
 
-//  @GetMapping("/campuses")
-//  List<ApiCampusData> getCampuses() {
-//    return StreamSupport.stream(campusRepo.findAll().spliterator(), false).toList();
-//  }
-
-//  @GetMapping("/peers")
-//  List<Peer> getPeers(@RequestParam(required = false) int wave,
-//                      @RequestParam(required = false) int intensive,
-//                      @RequestParam(required = false) String tribe,
-//                      @RequestParam(defaultValue = "0") int orderBy,
-//                      @RequestParam(defaultValue = "50") int peersPerPage,
-//                      @RequestParam(defaultValue = "0") int page) {
-//    StreamSupport.stream(baseDataRepo.findAll().spliterator(), false)
-//    return StreamSupport.stream(repo.findAll().spliterator(), false).toList();
-//  }
-
-//  @GetMapping("/peers/tribe/{tribe}")
-//  List<Peer> getPeersFromTribe(@PathVariable String tribe,
-//                               @RequestParam(defaultValue = "0") int orderBy,
-//                               @RequestParam(defaultValue = "50") int peersPerPage,
-//                               @RequestParam(defaultValue = "0") int page) {
-//
-//  }
-
-//  @GetMapping("/peers/wave/{wave}")
-//  List<Peer> getPeersFromWave(@PathVariable int wave,
-//                              @RequestParam(defaultValue = "0") int orderBy,
-//                              @RequestParam(defaultValue = "50") int peersPerPage,
-//                              @RequestParam(defaultValue = "0") int page) {
-//
-//  }
-
-//  @GetMapping("/peers/intensive/{intensive}")
-//  List<Peer> getPeersFromIntensive(@PathVariable int intensive,
-//                                   @RequestParam(defaultValue = "0") int orderBy,
-//                                   @RequestParam(defaultValue = "50") int peersPerPage,
-//                                   @RequestParam(defaultValue = "0") int page) {
-//
-//  }
-//
-//  @GetMapping("/peers/{peerUsername}")
-//  PeerData getPeerById(@PathVariable @NotBlank String peerUsername) {
-//    return repo.findByLogin(peerUsername);
-//  }
+  @GetMapping("/peers")
+  List<PeerBaseData> getPeers(@RequestParam(required = false) String wave,
+                      @RequestParam(required = false) Integer tribe,
+                      @RequestParam(defaultValue = "login") String orderBy,
+                      @RequestParam(defaultValue = "50") int peersPerPage,
+                      @RequestParam(defaultValue = "0") int page) {
+    List<PeerBaseData> data;
+    if (wave != null) {
+      if (tribe != null) {
+        data = baseDataRepo.findByWaveAndTribeId(wave, tribe, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
+      } else {
+        data = baseDataRepo.findByWave(wave, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
+      }
+    } else if (tribe != null) {
+      data = baseDataRepo.findByTribeId(tribe, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
+    } else {
+      data = baseDataRepo.findAll(PageRequest.of(page, peersPerPage, Sort.by(orderBy))).toList();
+    }
+    return data;
+  }
 }

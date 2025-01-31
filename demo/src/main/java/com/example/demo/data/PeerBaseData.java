@@ -19,5 +19,7 @@ public record PeerBaseData(
     @Column("tribe_id")
     int tribeId,
     @MappedCollection(idColumn = "id")
-    PeerMutableData peerMutableData
+    PeerMutableData peerMutableData,
+    @MappedCollection(idColumn = "id")
+    TribeData tribeData
 ) { }

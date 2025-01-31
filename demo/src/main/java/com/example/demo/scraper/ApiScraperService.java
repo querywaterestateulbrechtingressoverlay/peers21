@@ -60,15 +60,15 @@ public class ApiScraperService {
   public Map<String, Integer> getTribeParticipantLogins(TribeData tribe) {
     List<String> participantLoginList = new ArrayList<>();
     int page = 0;
-    while (true) {
+//    while (true) {
       ParticipantLoginsDTO participantLogins = requestService
-          .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.tribeId() + "/participants?limit=50&offset=" + 50 * page++);
-      if (participantLogins.participants().isEmpty()) {
-        break;
-      } else {
+          .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.tribeId() + "/participants?limit=5&offset=" + 50 * page++);
+//      if (participantLogins.participants().isEmpty()) {
+//        break;
+//      } else {
         participantLoginList.addAll(participantLogins.participants());
-      }
-    }
+//      }
+//    }
     var asd = new HashMap<String, Integer>();
     participantLoginList.forEach(l -> {
       asd.put(l, tribe.tribeId());
@@ -108,7 +108,7 @@ public class ApiScraperService {
         int intensive = getPeerIntensive(a.getKey());
         peerBaseDataRepo.save(
             new PeerBaseData(
-                null, peer.login(), peer.className(), intensive, a.getValue(), null
+                null, peer.login(), peer.className(), intensive, a.getValue(), null, null
             )
         );
       }
@@ -126,7 +126,10 @@ public class ApiScraperService {
       logger.info("peer {}", peer.login());
       ParticipantDTO peerResponse = requestService.request(ParticipantDTO.class, "/participants/" + peer.login());
       ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
-      changedPeerData.add(PeerMutableData.updateFromDTO(peer.peerMutableData().id(), peer.peerMutableData().peerId(), 0, peerResponse, peerPointsDTO));
+      changedPeerData.add(PeerMutableData.updateFromDTO(
+        peer.peerMutableData() == null ? null : peer.peerMutableData().id(),
+        peer.id(),
+        0, peerResponse, peerPointsDTO));
     }
     peerMutableDataRepo.saveAll(changedPeerData);
     logger.info("update finished, updated {} peers", changedPeerData.size());
