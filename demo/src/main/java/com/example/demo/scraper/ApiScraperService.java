@@ -20,47 +20,28 @@ public class ApiScraperService {
   @Autowired
   TribeDataRepository tribeDataRepo;
   @Autowired
-  PeerBaseDataRepository peerBaseDataRepo;
-  @Autowired
-  PeerMutableDataRepository peerMutableDataRepo;
+  PeerDataRepository peerRepo;
   @Autowired
   ApiRequestService requestService;
 
-  public List<ParticipantDTO> getPeersFromCampus(String campusId) {
-    var participantLoginList = new ArrayList<String>();
-    int page = 0;
-    while (true) {
-      ParticipantLoginsDTO participantLogins = requestService.request(ParticipantLoginsDTO.class, "campuses/" + campusId + "/participants?limit=50&offset=" + 50 * page++);
-      if (participantLogins.participants().isEmpty()) {
-        break;
-      } else {
-        participantLoginList.addAll(participantLogins.participants());
-      }
-    }
-    var parsedPeerData = new ArrayList<ParticipantDTO>();
-    for (String peerLogin : participantLoginList) {
-      logger.info(peerLogin);
-      ParticipantDTO participant = requestService.request(ParticipantDTO.class, "participants/" + peerLogin);
-      if (participant.status() == PeerState.ACTIVE || participant.status() == PeerState.FROZEN) {
-        parsedPeerData.add(participant);
-      }
-    }
-    return parsedPeerData;
-  }
-
   public List<TribeData> getTribes(String campusId) {
-    return requestService
+    logger.info("retrieving tribes from campus {}", campusId);
+    List<TribeData> tribes = requestService
         .request(CoalitionsDTO.class, "/campuses/" + campusId + "/coalitions")
         .coalitions()
         .stream()
         .map((dto) -> new TribeData(null, dto.coalitionId(), dto.name()))
         .toList();
+    logger.info("retrieved {} tribes", tribes.size());
+    return tribes;
   }
 
   public Map<String, Integer> getTribeParticipantLogins(TribeData tribe) {
+    logger.info("retrieving peer logins from tribe {}", tribe.name());
     List<String> participantLoginList = new ArrayList<>();
     int page = 0;
 //    while (true) {
+//    logger.info("page {}", page);
       ParticipantLoginsDTO participantLogins = requestService
           .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.tribeId() + "/participants?limit=5&offset=" + 50 * page++);
 //      if (participantLogins.participants().isEmpty()) {
@@ -69,11 +50,12 @@ public class ApiScraperService {
         participantLoginList.addAll(participantLogins.participants());
 //      }
 //    }
-    var asd = new HashMap<String, Integer>();
-    participantLoginList.forEach(l -> {
-      asd.put(l, tribe.tribeId());
-    });
-    return asd;
+    var peers = new HashMap<String, Integer>();
+    for (String login : participantLoginList) {
+      peers.put(login, tribe.tribeId());
+    }
+    logger.info("retrieved {} peer logins", peers.size());
+    return peers;
   }
 
   public int getPeerIntensive(String peerLogin) {
@@ -94,44 +76,45 @@ public class ApiScraperService {
         .findFirst()
         .get()
         .id();
-//    List<ParticipantDTO> peerData = getPeersFromCampus(yktId);
+    logger.info("ykt campus id = {}", yktId);
     List<TribeData> tribes = getTribes(yktId);
     tribeDataRepo.saveAll(tribes);
     var peerTribes = new HashMap<String, Integer>();
-    for (TribeData t : tribes) {
-      peerTribes.putAll(getTribeParticipantLogins(t));
+    for (var tribe : tribes) {
+      peerTribes.putAll(getTribeParticipantLogins(tribe));
     }
-    for (var a : peerTribes.entrySet()) {
-      logger.info(a.getKey());
-      ParticipantDTO peer = requestService.request(ParticipantDTO.class, "participants/" + a.getKey());
-      if (peer.status() == PeerState.ACTIVE || peer.status() == PeerState.FROZEN) {
-        int intensive = getPeerIntensive(a.getKey());
-        peerBaseDataRepo.save(
-            new PeerBaseData(
-                null, peer.login(), peer.className(), intensive, a.getValue(), null, null
-            )
+    for (var peerLoginAndTribe : peerTribes.entrySet()) {
+      ParticipantDTO peerDTO = requestService.request(ParticipantDTO.class, String.format("participants/%s", peerLoginAndTribe.getKey()));
+      if (peerDTO.status() == PeerState.ACTIVE || peerDTO.status() == PeerState.FROZEN) {
+        logger.info("saving peer {}...", peerLoginAndTribe.getKey());
+        int intensive = getPeerIntensive(peerLoginAndTribe.getKey());
+        ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, String.format("/participants/%s/points", peerLoginAndTribe.getKey()));
+        peerRepo.save(
+          PeerData.createFromDTO(peerDTO, peerPointsDTO, intensive, peerLoginAndTribe.getValue(), 0)
         );
+      } else {
+        logger.info("peer {} is inactive, skipping", peerLoginAndTribe.getKey());
       }
-
     }
     logger.info("application initialized");
+  }
+
+  PeerData updatePeer(PeerData peer) {
+    logger.info("updating peer {}", peer.login());
+    ParticipantDTO peerDTO = requestService.request(ParticipantDTO.class, String.format("/participants/%s", peer.login()));
+    ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, String.format("/participants/%s/points", peer.login()));
+    return peer.updateFromDTO(peerDTO, peerPointsDTO, 0);
   }
 
   @Scheduled(fixedRateString = "PT10M")
   public void updatePeerList() {
     logger.info("updating peer info...");
-    var peerList = peerBaseDataRepo.findAll();
-    var changedPeerData = new ArrayList<PeerMutableData>();
-    for (PeerBaseData peer : peerList) {
-      logger.info("peer {}", peer.login());
-      ParticipantDTO peerResponse = requestService.request(ParticipantDTO.class, "/participants/" + peer.login());
-      ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, "/participants/" + peer.login() + "/points");
-      changedPeerData.add(PeerMutableData.updateFromDTO(
-        peer.peerMutableData() == null ? null : peer.peerMutableData().id(),
-        peer.id(),
-        0, peerResponse, peerPointsDTO));
+    var peerList = peerRepo.findAll();
+    var changedPeerData = new ArrayList<PeerData>();
+    for (PeerData peer : peerList) {
+      changedPeerData.add(updatePeer(peer));
     }
-    peerMutableDataRepo.saveAll(changedPeerData);
+    peerRepo.saveAll(changedPeerData);
     logger.info("update finished, updated {} peers", changedPeerData.size());
   }
 }

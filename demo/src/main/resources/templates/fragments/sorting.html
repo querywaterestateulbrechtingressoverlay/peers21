@@ -1,0 +1,7 @@
+<th scope="col" th:fragment="sorting(field, label)">
+    <a th:href="@{'/peers?' + 'page=' + ${currentPage} + '&size=' + ${pageSize}
+                + ${orderBy!=null ? '&orderBy=' + field + '&orderDir=' + (orderBy == field ? reverseSortDirection : sortDirection) : ''}}">
+        [[${label}]] </a>
+    <span th:if="${sortField == field}"
+          th:class="${sortDirection == 'asc' ? 'fas fa-arrow-down-short-wide' : 'fas fa-arrow-down-wide-short'}"></span>
+</th>
