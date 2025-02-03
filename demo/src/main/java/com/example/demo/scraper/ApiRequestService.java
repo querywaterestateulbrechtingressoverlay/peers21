@@ -96,12 +96,10 @@ public class ApiRequestService {
             )
         )
           .body(ApiKeyResponse.class);
-      if (keyEntity != null) {
-        rebuildClient();
-        keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
-        logger.info("successfully updated API key, new key expiry date = {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
-        apiClient = apiClient.mutate().defaultHeader("Authorization", "Bearer " + keyEntity.accessToken()).build();
-      }
+      rebuildClient();
+      keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
+      logger.info("successfully updated API key, new key expiry date = {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
+      apiClient = apiClient.mutate().defaultHeader("Authorization", "Bearer " + keyEntity.accessToken()).build();
     }
   }
   public <T> T request(Class<T> responseClass, String apiUrl) {
