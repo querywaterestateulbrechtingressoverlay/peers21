@@ -16,18 +16,20 @@ import java.util.stream.Collectors;
 @Controller
 public class FrontendController {
   @Autowired
-  private PeerDataRepository baseRepo;
+  private PeerDataRepository peerRepo;
   @GetMapping({"/", "peers"})
   String index(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "login") String orderBy, @RequestParam(defaultValue = "asc") String orderDir,  Model model) {
-    int totalPages = baseRepo.findAll(Pageable.ofSize(50)).getTotalPages();
     Sort.Direction direction = orderDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
     Sort.Order order = new Sort.Order(direction, orderBy);
+    var peerPage = peerRepo.findAll(PageRequest.of(page - 1, 30, Sort.by(order)));
     model.addAttribute("orderBy", orderBy);
-    model.addAttribute("currentPage", 1);
-    model.addAttribute("totalPages", totalPages);
-    model.addAttribute("uniqueWaves", baseRepo.findDistinctWaves());
-    model.addAttribute("uniqueTribes", baseRepo.findDistinctTribes().stream().collect(Collectors.toMap(TribeData::tribeId, TribeData::name)));
-    model.addAttribute("peers", baseRepo.findAll(PageRequest.of(page, 50, Sort.by(order))).getContent());
+    model.addAttribute("currentPage", peerPage.getNumber() + 1);
+    model.addAttribute("totalPages", peerPage.getTotalPages());
+    model.addAttribute("uniqueWaves", peerRepo.findDistinctWaves());
+    model.addAttribute("uniqueTribes", peerRepo.findDistinctTribes().stream().collect(Collectors.toMap(TribeData::tribeId, TribeData::name)));
+    model.addAttribute("sortDirection", orderDir);
+    model.addAttribute("reverseSortDirection", orderDir.equals("asc") ? "desc" : "asc");
+    model.addAttribute("peers", peerPage.getContent());
     return "index";
   }
 }
