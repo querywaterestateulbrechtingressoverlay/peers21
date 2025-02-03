@@ -5,52 +5,87 @@
     <title>Peers</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0" />
-    <title>BezKoder - Spring Boot Thymeleaf Pagination and Sorting example</title>
 
-    <link rel="stylesheet" type="text/css" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
-          integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script type="text/javascript" th:src="@{/webjars/jquery/jquery.min.js}"></script>
-    <script type="text/javascript" th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <style>
+        .disabled {
+           pointer-events: none;
+           cursor: default;
+           color: black;
+        }
+        ul > li {
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-4">
     <h2>Peers</h2>
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <label for="wave-filter">Wave:</label>
-            <select id="wave-filter" class="form-select">
-                <option value="">All</option>
-                <option th:each="wave : ${uniqueWaves}" th:value="${wave}" th:text="${wave}"></option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="tribe-filter">Tribe:</label>
-            <select id="tribe-filter" class="form-select">
-                <option value="">All</option>
-                <option th:each="tribe : ${uniqueTribes}" th:value="${tribe.key}" th:text="${tribe.value}"></option>
-            </select>
-        </div>
-    </div>
+
+    <nav aria-label="Pagination" th:if="${totalPages > 0}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                <a th:replace="~{fragments/paging :: paging(1, '<<', 'First Page')}" th:classappend="${currentPage == 1} ? 'disabled'"></a>
+            </li>
+            <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
+                <a th:replace="~{fragments/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')}"></a>
+            </li>
+            <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
+                <a class="page-link" href="#">...</a>
+            </li>
+            <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
+                th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
+                <a th:replace="~{fragments/paging :: paging(${page}, ${page}, 'Page ' + ${page})}"></a>
+            </li>
+            <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
+                <a class="page-link" href="#">...</a>
+            </li>
+            <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                <a th:replace="~{fragments/paging :: paging(${currentPage + 1},'Next', 'Next Page')}"></a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                <a th:replace="~{fragments/paging :: paging(${totalPages}, '>>', 'Last Page')}"></a>
+            </li>
+        </ul>
+    </nav>
+
+<!--    <div class="row mb-3">-->
+<!--        <div class="col-md-3">-->
+<!--            <label for="wave-filter">Wave:</label>-->
+<!--            <select id="wave-filter" class="form-select">-->
+<!--                <option value="">All</option>-->
+<!--                <option th:each="wave : ${uniqueWaves}" th:value="${wave}" th:text="${wave}"></option>-->
+<!--            </select>-->
+<!--        </div>-->
+<!--        <div class="col-md-3">-->
+<!--            <label for="tribe-filter">Tribe:</label>-->
+<!--            <select id="tribe-filter" class="form-select">-->
+<!--                <option value="">All</option>-->
+<!--                <option th:each="tribe : ${uniqueTribes}" th:value="${tribe.key}" th:text="${tribe.value}"></option>-->
+<!--            </select>-->
+<!--        </div>-->
+<!--    </div>-->
     <div th:if="${peers.size() > 0}">
         <table class="table table-hover table-responsive-xl">
             <thead class="thead-light">
             <tr>
-                <th th:replace="fragments/sorting :: sorting('login','Login')"></th>
-                <th th:replace="fragments/sorting :: sorting('expValue','Experience')"></th>
-<!--                <th th:replace="fragments/sorting :: sorting('description','Description')"></th>-->
-<!--                <th th:replace="fragments/sorting :: sorting('level','Level')"></th>-->
-                <th>Published</th>
-                <th>Actions</th>
+                <th th:replace="~{fragments/sorting :: sorting('login','Login')}"></th>
+                <th th:replace="~{fragments/sorting :: sorting('wave','Wave')}"></th>
+                <th th:replace="~{fragments/sorting :: sorting('tribeId','Tribe')}"></th>
+                <th th:replace="~{fragments/sorting :: sorting('expValue','Experience')}"></th>
+                <th th:replace="~{fragments/sorting :: sorting('peerReviewPoints','PRP')}"></th>
+                <th th:replace="~{fragments/sorting :: sorting('codeReviewPoints','CRP')}"></th>
+                <th th:replace="~{fragments/sorting :: sorting('coins','Coins')}"></th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="peer : ${peers}">
                 <th scope="row">[[${peer.login}]]</th>
+                <td>[[${peer.wave}]]</td>
+                <td>[[${uniqueTribes.get(peer.tribeId)}]]</td>
                 <td>[[${peer.expValue}]]</td>
-
+                <td>[[${peer.peerReviewPoints}]]</td>
+                <td>[[${peer.codeReviewPoints}]]</td>
+                <td>[[${peer.coins}]]</td>
             </tr>
             </tbody>
         </table>
@@ -63,73 +98,26 @@
     <nav aria-label="Pagination" th:if="${totalPages > 0}">
         <ul class="pagination justify-content-center">
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a th:replace="fragments/paging :: paging(1, '<<', 'First Page')"></a>
+                <a th:replace="~{fragments/paging :: paging(1, '<<', 'First Page')}" th:classappend="${currentPage == 1} ? 'disabled'"></a>
             </li>
             <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a th:replace="fragments/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')"></a>
+                <a th:replace="~{fragments/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')}"></a>
             </li>
             <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
                 <a class="page-link" href="#">...</a>
             </li>
             <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
                 th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
-                <a th:replace="fragments/paging :: paging(${page}, ${page}, 'Page ' + ${page})"></a>
+                <a th:replace="~{fragments/paging :: paging(${page}, ${page}, 'Page ' + ${page})}"></a>
             </li>
             <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
                 <a class="page-link" href="#">...</a>
             </li>
             <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a th:replace="fragments/paging :: paging(${currentPage + 1},'Next', 'Next Page')"></a>
+                <a th:replace="~{fragments/paging :: paging(${currentPage + 1},'Next', 'Next Page')}"></a>
             </li>
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a th:replace="fragments/paging :: paging(${totalPages}, '>>', 'Last Page')"></a>
-            </li>
-        </ul>
-    </nav>
-
-
-    <table id="sortable-table" class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Login</th>
-            <th>Wave</th>
-            <th>Tribe</th>
-            <th>Exp</th>
-            <th>PRP</th>
-            <th>CRP</th>
-            <th>Coins</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="peer : ${peers}">
-            <td th:text="${peer.login}"></td>
-            <td th:text="${peer.wave}"></td>
-            <td th:text="${uniqueTribes.get(peer.tribeId)}"></td>
-            <td th:text="${peer.expValue}"></td>
-            <td th:text="${peer.peerReviewPoints}"></td>
-            <td th:text="${peer.codeReviewPoints}"></td>
-            <td th:text="${peer.coins}"></td>
-        </tr>
-        </tbody>
-    </table>
-
-    <!-- Pagination -->
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled' : ''">
-                <a class="page-link" th:href="@{/peers(page=1)}">First</a>
-            </li>
-            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled' : ''">
-                <a class="page-link" th:href="@{/peers(page=${currentPage - 1})}">Previous</a>
-            </li>
-            <li class="page-item" th:each="page : ${#numbers.sequence(1, totalPages)}" th:classappend="${currentPage == page} ? 'active' : ''">
-                <a class="page-link" th:href="@{/peers(page=${page})}" th:text="${page}"></a>
-            </li>
-            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled' : ''">
-                <a class="page-link" th:href="@{/peers(page=${currentPage + 1})}">Next</a>
-            </li>
-            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled' : ''">
-                <a class="page-link" th:href="@{/peers(page=${totalPages})}">Last</a>
+                <a th:replace="~{fragments/paging :: paging(${totalPages}, '>>', 'Last Page')}"></a>
             </li>
         </ul>
     </nav>

@@ -40,16 +40,16 @@ public class ApiScraperService {
     logger.info("retrieving peer logins from tribe {}", tribe.name());
     List<String> participantLoginList = new ArrayList<>();
     int page = 0;
-//    while (true) {
-//    logger.info("page {}", page);
+    while (true) {
+    logger.info("page {}", page);
       ParticipantLoginsDTO participantLogins = requestService
-          .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.tribeId() + "/participants?limit=5&offset=" + 50 * page++);
-//      if (participantLogins.participants().isEmpty()) {
-//        break;
-//      } else {
+          .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.tribeId() + "/participants?limit=50&offset=" + 50 * page++);
+      if (participantLogins.participants().isEmpty()) {
+        break;
+      } else {
         participantLoginList.addAll(participantLogins.participants());
-//      }
-//    }
+      }
+    }
     var peers = new HashMap<String, Integer>();
     for (String login : participantLoginList) {
       peers.put(login, tribe.tribeId());
