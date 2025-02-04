@@ -64,6 +64,10 @@
 <!--            </select>-->
 <!--        </div>-->
 <!--    </div>-->
+    <form th:action="${loggedIn} ? @{/logout} : @{/login}" method="post">
+        <div th:if="${!loggedIn}"><label> login : <input type="text" name="username"/> </label></div>
+        <div><input type="submit" th:value="${!loggedIn} ? 'sign in' : 'log out'"/></div>
+    </form>
     <div th:if="${peers.size() > 0}">
         <table class="table table-hover table-responsive-xl">
             <thead class="thead-light">

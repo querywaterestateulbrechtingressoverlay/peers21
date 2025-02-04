@@ -30,6 +30,7 @@ public class FrontendController {
     model.addAttribute("sortDirection", orderDir);
     model.addAttribute("reverseSortDirection", orderDir.equals("asc") ? "desc" : "asc");
     model.addAttribute("peers", peerPage.getContent());
+    model.addAttribute("loggedIn", true);
     return "index";
   }
 }
