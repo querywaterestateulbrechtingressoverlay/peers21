@@ -26,24 +26,28 @@ public class ApiController {
   }
 
   @GetMapping("/peers")
-  List<PeerData> getPeers(@RequestParam(required = false) String wave,
-                          @RequestParam(required = false) Integer tribe,
-                          @RequestParam(defaultValue = "login") String orderBy,
+  List<PeerData> getPeers(@RequestParam(defaultValue = "login") String orderBy,
                           @RequestParam(defaultValue = "50") int peersPerPage,
                           @RequestParam(defaultValue = "0") int page) {
-    List<PeerData> data;
-    if (wave != null) {
-      if (tribe != null) {
-        data = baseDataRepo.findByWaveAndTribeId(wave, tribe, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
-      } else {
-        data = baseDataRepo.findByWave(wave, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
-      }
-    } else if (tribe != null) {
-      data = baseDataRepo.findByTribeId(tribe, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
-    } else {
-      data = baseDataRepo.findAll(PageRequest.of(page, peersPerPage, Sort.by(orderBy))).toList();
-    }
-    return data;
+    return baseDataRepo.findAll(PageRequest.of(page, peersPerPage, Sort.by(orderBy))).toList();
+  }
+  @GetMapping("/wave/{waveId}")
+  List<PeerData> getPeersByWave(
+    @PathVariable Integer waveId,
+    @RequestParam(defaultValue = "login") String orderBy,
+    @RequestParam(defaultValue = "50") int peersPerPage,
+    @RequestParam(defaultValue = "0") int page
+  ) {
+    return baseDataRepo.findByWave(waveId, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
+  }
+  @GetMapping("/tribe/{tribeId}")
+  List<PeerData> getPeersByTribe(
+    @PathVariable Integer tribeId,
+    @RequestParam(defaultValue = "login") String orderBy,
+    @RequestParam(defaultValue = "50") int peersPerPage,
+    @RequestParam(defaultValue = "0") int page
+  ) {
+    return baseDataRepo.findByTribeId(tribeId, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
   }
   @GetMapping("/update")
   void updatePeerList() {
