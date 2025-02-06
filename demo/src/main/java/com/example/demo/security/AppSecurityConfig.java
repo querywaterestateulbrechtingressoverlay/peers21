@@ -13,10 +13,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class AppSecurityConfig {
-//  @Bean
-//  public SecurityFilterChain securityConfig(HttpSecurity http) throws Exception {
-//    http.addFilter()
-//  }
+  @Bean
+  public SecurityFilterChain securityConfig(HttpSecurity http) throws Exception {
+    http.addFilter()
+  }
 //  @Bean
 //  public UserDetailsManager userDetailsService() {
 //    return new InMemoryUserDetailsManager(User.builder().username("user").build());
