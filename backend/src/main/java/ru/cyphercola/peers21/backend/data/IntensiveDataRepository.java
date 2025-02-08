@@ -1,0 +1,11 @@
+package ru.cyphercola.peers21.backend.data;
+
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
+
+import java.util.Date;
+
+public interface IntensiveDataRepository extends CrudRepository<IntensiveData, Integer> {
+  @Query("SELECT COALESCE((SELECT id FROM intensive_data WHERE :firstXpAccrualDate BETWEEN start_date AND end_date), 0)")
+  Integer findIntensiveByFirstXpAccrualDate(Date firstXpAccrualDate);
+}

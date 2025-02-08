@@ -1,1 +1,15 @@
- 
+thead > tr > td {
+    position: relative;
+}
+
+thead > tr > td:hover {
+    cursor: pointer;
+}
+
+img {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 0.6em;
+}
