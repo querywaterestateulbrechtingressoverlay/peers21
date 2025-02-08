@@ -2,26 +2,43 @@
 <html lang="">
   <head>
     <meta charset="utf-8">
+    <link href="css/styles.css" rel="stylesheet">
     <title></title>
   </head>
   <body>
     <header></header>
     <main>
+      <div id="filter-menu">
+        <label for="tribe-filter">Tribe:</label>
+        <select id="tribe-filter">
+          <option>All</option>
+        </select>
+        <label for="wave-filter">Wave:</label>
+        <select id="wave-filter">
+          <option>All</option>
+        </select>
+      </div>
+      <div id="navigation-top">
+
+      </div>
       <table id="peer-table">
         <thead>
           <tr>
-            <td>Login</td>
-            <td>Wave</td>
-            <td>Tribe</td>
-            <td>Experience</td>
-            <td>PRP</td>
-            <td>CRP</td>
+            <td id="login">Login</td>
+            <td id="wave">Wave</td>
+            <td id="tribeId">Tribe</td>
+            <td id="expValue">Experience</td>
+            <td id="peerReviewPoints">PRP</td>
+            <td id="codeReviewPoints">CRP</td>
           </tr>
         </thead>
         <tbody>
 
         </tbody>
       </table>
+      <div id="navigation-bottom">
+      
+      </div>
     </main>
     <footer></footer>
     <script src="js/peer-api.js"></script>
