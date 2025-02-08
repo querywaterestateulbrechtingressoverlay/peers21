@@ -25,12 +25,12 @@ async function getPeerData() {
     json.forEach(peer => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <tr>${peer.login}</tr>
-        <tr>${peer.wave}</tr>
-        <tr>${peer.tribeId}</tr>
-        <tr>${peer.expValue}</tr>
-        <tr>${peer.peerReviewPoints}</tr>
-        <tr>${peer.codeReviewPoints}</tr>
+        <td>${peer.login}</tr>
+        <td>${peer.wave}</tr>
+        <td>${peer.tribeId}</tr>
+        <td>${peer.expValue}</tr>
+        <td>${peer.peerReviewPoints}</tr>
+        <td>${peer.codeReviewPoints}</tr>
       `
       tableBody.appendChild(row);
     })
