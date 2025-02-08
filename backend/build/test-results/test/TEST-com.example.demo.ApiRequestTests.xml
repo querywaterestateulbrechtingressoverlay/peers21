@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.demo.ApiRequestTests" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-01-24T09:20:28" hostname="tu-e6.yks.21-school.ru" time="0.865">
+  <properties/>
+  <testcase name="testSimpleApiRequest()" classname="com.example.demo.ApiRequestTests" time="0.765"/>
+  <testcase name="testApiTokenRequest()" classname="com.example.demo.ApiRequestTests" time="0.098"/>
+  <system-out><![CDATA[
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2025-01-24T18:20:28.166+09:00  INFO 333874 --- [    Test worker] com.example.demo.ApiRequestTests         : Starting ApiRequestTests using Java 23.0.1 with PID 333874 (started by cypherco in /home/cypherco/java/peers21/demo)
+2025-01-24T18:20:28.169+09:00  INFO 333874 --- [    Test worker] com.example.demo.ApiRequestTests         : No active profile set, falling back to 1 default profile: "default"
+2025-01-24T18:20:28.328+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : retrieving API username from environment variables...
+2025-01-24T18:20:28.328+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : retrieving API password from environment variables...
+2025-01-24T18:20:28.370+09:00  INFO 333874 --- [    Test worker] com.example.demo.ApiRequestTests         : Started ApiRequestTests in 0.486 seconds (process running for 4.74)
+2025-01-24T18:20:29.095+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : API key is out of date (current timestamp is 1737710429095), key expiry timestamp is 1737710428328
+2025-01-24T18:20:29.096+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : updating API key...
+2025-01-24T18:20:29.181+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : successfully updated API key, new key expiry date = 2025-01-24T18:20:39.181
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2025-01-24T18:20:29.263+09:00  INFO 333874 --- [    Test worker] com.example.demo.ApiRequestTests         : Starting ApiRequestTests using Java 23.0.1 with PID 333874 (started by cypherco in /home/cypherco/java/peers21/demo)
+2025-01-24T18:20:29.264+09:00  INFO 333874 --- [    Test worker] com.example.demo.ApiRequestTests         : No active profile set, falling back to 1 default profile: "default"
+2025-01-24T18:20:29.279+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : retrieving API username from environment variables...
+2025-01-24T18:20:29.280+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : retrieving API password from environment variables...
+2025-01-24T18:20:29.285+09:00  INFO 333874 --- [    Test worker] com.example.demo.ApiRequestTests         : Started ApiRequestTests in 0.077 seconds (process running for 5.655)
+2025-01-24T18:20:29.293+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : API key is out of date (current timestamp is 1737710429293), key expiry timestamp is 1737710429279
+2025-01-24T18:20:29.293+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : updating API key...
+2025-01-24T18:20:29.298+09:00  INFO 333874 --- [    Test worker] c.e.demo.scraper.ApiRequestService       : successfully updated API key, new key expiry date = 2025-01-24T18:20:39.298
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (/opt/goinfre/cypherco/gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.15.11/a38b16385e867f59a641330f0362ebe742788ed8/byte-buddy-agent-1.15.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>
