@@ -19,4 +19,11 @@ CREATE TABLE IF NOT EXISTS peer_data(
     code_review_points INT,
     coins INT,
     FOREIGN KEY (tribe_id) REFERENCES tribe_data(tribe_id),
-    FOREIGN KEY (intensive) REFERENCES intensive_data(id));
+    FOREIGN KEY (intensive) REFERENCES intensive_data(id)
+    );
+CREATE TABLE IF NOT EXISTS api_users(
+    id SERIAL PRIMARY KEY,
+    login VARCHAR(255) UNIQUE,
+    password VARCHAR(255),
+    role VARCHAR(255)
+);

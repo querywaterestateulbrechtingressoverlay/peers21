@@ -6,3 +6,6 @@ INSERT INTO intensive_data VALUES (5, '2024-06-24', '2024-07-19') ON CONFLICT DO
 INSERT INTO intensive_data VALUES (6, '2024-08-19', '2024-09-13') ON CONFLICT DO NOTHING;
 INSERT INTO intensive_data VALUES (7, '2024-09-30', '2024-10-25') ON CONFLICT DO NOTHING;
 INSERT INTO intensive_data VALUES (0, '1970-01-01', '1970-01-01') ON CONFLICT DO NOTHING;
+
+INSERT INTO api_users (login, password, role) VALUES ('admin', 'password', 'ADMIN') ON CONFLICT DO NOTHING;
+INSERT INTO api_users (login, password, role) VALUES ('user', 'password', 'USER') ON CONFLICT DO NOTHING;
