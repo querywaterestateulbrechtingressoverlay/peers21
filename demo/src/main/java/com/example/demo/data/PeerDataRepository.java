@@ -6,8 +6,10 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PeerDataRepository extends CrudRepository<PeerData, Integer>, PagingAndSortingRepository<PeerData, Integer> {
+  Optional<PeerData> findFirst1ByLogin(String login);
   @Query("SELECT login FROM peer_data")
   List<String> getAllLogins();
 
