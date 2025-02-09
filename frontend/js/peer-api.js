@@ -1,7 +1,7 @@
 var currentPage = 0;
 var totalPages = 0;
 
-const apiUrl = "http://localhost:8080/api";
+const apiUrl = "/api";
 
 const apiUsername = "user";
 const apiPassword = "password";
