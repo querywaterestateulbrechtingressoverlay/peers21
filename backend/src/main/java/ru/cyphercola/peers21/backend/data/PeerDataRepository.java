@@ -1,5 +1,6 @@
 package ru.cyphercola.peers21.backend.data;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -19,7 +20,8 @@ public interface PeerDataRepository extends CrudRepository<PeerData, Integer>, P
   @Query("SELECT DISTINCT tribe_data.tribe_id, tribe_data.name FROM peer_data LEFT JOIN tribe_data ON peer_data.tribe_id = tribe_data.tribe_id")
   List<TribeData> findDistinctTribes();
 
-  List<PeerData> findByWave(int wave, Pageable page);
+  Page<PeerData> findByWave(String wave, Pageable page);
 
-  List<PeerData> findByTribeId(int tribeId, Pageable page);
+  Page<PeerData> findByTribeId(int tribeId, Pageable page);
+  Page<PeerData> findByTribeIdAndWave(int tribeId, String wave, Pageable page);
 }

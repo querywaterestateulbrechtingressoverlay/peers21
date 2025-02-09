@@ -13,3 +13,16 @@ img {
     transform: translateY(-50%);
     height: 0.6em;
 }
+
+table {
+  border: solid black;
+  border-spacing: 1px;
+  border-collapse: collapse;
+}
+thead > tr {
+  /* border: solid black; */
+  background: #e7e3e3;
+}
+td {
+  border-left: solid;
+}
