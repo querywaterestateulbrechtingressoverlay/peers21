@@ -1,4 +1,5 @@
-var page = 1;
+var currentPage = 0;
+var totalPages = 0;
 
 const apiUrl = "http://localhost:8080/api";
 
@@ -9,9 +10,6 @@ var tribeData = [];
 var waveData = [];
 
 const headers = new Headers();
-headers.set(
-  "Authorization", "Basic " + btoa(apiUsername + ":" + apiPassword)
-);
 
 const sort = {
   column: "login",
@@ -28,9 +26,43 @@ tableB.forEach((e) => {
       sort.ascending = true;
     }
     drawOrderIndicator();
-    getPeerData(page, sort.column, sort.ascending);
+    getPeerData(0, sort.column, sort.ascending,
+      document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+      document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
   })
-})
+});
+
+document.querySelectorAll(".first-page").forEach(e => {
+  e.addEventListener("click", () => {
+    getPeerData(0, sort.column, sort.ascending,
+      document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+      document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
+  });
+});
+
+document.querySelectorAll(".previous-page").forEach(e => {
+  e.addEventListener("click", () => {
+    getPeerData(currentPage - 1, sort.column, sort.ascending,
+      document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+      document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
+  });
+});
+
+document.querySelectorAll(".next-page").forEach(e => {
+  e.addEventListener("click", () => {
+    getPeerData(currentPage + 1, sort.column, sort.ascending,
+      document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+      document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
+  });
+});
+
+document.querySelectorAll(".last-page").forEach(e => {
+  e.addEventListener("click", () => {
+    getPeerData(totalPages - 1, sort.column, sort.ascending,
+      document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+      document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
+  });
+});
 
 function drawOrderIndicator() {
   const existingIndicator = document.querySelector("img");
@@ -42,10 +74,16 @@ function drawOrderIndicator() {
   document.getElementById(sort.column).appendChild(indicator);
 }
 
-window.onload = () => {
+window.onload = async () => {
+  headers.set(
+    "Authorization", "Basic " + btoa(apiUsername + ":" + apiPassword)
+  );
+  console.log(btoa(apiUsername + ":" + apiPassword));
+  await populateFilters();
+  await getPeerData(currentPage, "login", true);
+  // currentPage = pagination.currentPage;
+  // totalPages = pagination.totalPages;
   drawOrderIndicator();
-  populateFilters().then();
-  getPeerData(1, "login", true);
 }
 
 async function populateFilters() {
@@ -61,46 +99,88 @@ async function populateFilters() {
     const tribeFilter = document.getElementById("tribe-filter");
     tribeData.forEach(t => {
       const tribe = document.createElement("option");
+      tribe.setAttribute("id", "filter-" + t.name.toLowerCase());
       tribe.innerHTML = t.name;
       tribeFilter.appendChild(tribe);
     })
     const waveFilter = document.getElementById("wave-filter");
     waveData.forEach(w => {
       const wave = document.createElement("option");
+      wave.setAttribute("id", "filter-" + w.toLowerCase());
       wave.innerHTML = w;
       waveFilter.appendChild(wave);
     })
     tribeFilter.addEventListener("change", (event) => {
-      console.log(event.target.value);
+      getPeerData(0, sort.column, sort.ascending,
+        document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+        document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
+    })
+    waveFilter.addEventListener("change", (event) => {
+      getPeerData(0, sort.column, sort.ascending,
+        document.getElementById("tribe-filter").options[document.getElementById("tribe-filter").selectedIndex].text,
+        document.getElementById("wave-filter").options[document.getElementById("wave-filter").selectedIndex].text);
     })
   } catch (error) {
     console.error(error.message);
   }
 }
 
-async function getPeerData(page, orderBy, ascending) {
+async function getPeerData(page, orderBy, ascending, tribe, wave) {
   const params = new URLSearchParams();
+  params.append("page", page);
   params.append("orderBy", orderBy);
   params.append("orderAscending", ascending);
+  if (tribe != null && tribe != "All") {
+    params.append("tribeId", tribeData.find((t) => t.name == tribe).tribeId);
+  }
+  if (wave != null && wave != "All") {
+    params.append("wave", wave);
+  }
   try {
     const peerResponse = await fetch(apiUrl + "/peers?" + params, {
       headers: headers
     });
     const json = await peerResponse.json();
     const tableBody = document.querySelector("#peer-table tbody");
-    tableBody.innerHTML = "";
-    json.forEach(peer => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${peer.login}</tr>
-        <td>${peer.wave}</tr>
-        <td>${tribeData.find((t) => t.tribeId == peer.tribeId).name}</tr>
-        <td>${peer.expValue}</tr>
-        <td>${peer.peerReviewPoints}</tr>
-        <td>${peer.codeReviewPoints}</tr>
-      `
-      tableBody.appendChild(row);
-    })
+    if (json.size == 0) {
+      tableBody.innerHTML = "no peers found";  
+    } else {
+      tableBody.innerHTML = "";
+      json.peerData.forEach(peer => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${peer.login}</tr>
+          <td>${peer.wave}</tr>
+          <td>${tribeData.find((t) => t.tribeId == peer.tribeId).name}</tr>
+          <td>${peer.expValue}</tr>
+          <td>${peer.peerReviewPoints}</tr>
+          <td>${peer.codeReviewPoints}</tr>
+        `
+        tableBody.appendChild(row);
+      })
+    }
+    // const pagination = {
+    //   currentPage: json.currentPage,
+    //   totalPages: json.totalPages
+    // }
+    // return pagination;
+    currentPage = json.currentPage;
+    totalPages = json.totalPages;
+    if (currentPage == 0) {
+      document.querySelectorAll(".first-page").forEach(e => e.disabled = true);
+      document.querySelectorAll(".previous-page").forEach(e => e.disabled = true);
+    } else {
+      document.querySelectorAll(".first-page").forEach(e => e.disabled = false);
+      document.querySelectorAll(".previous-page").forEach(e => e.disabled = false);
+    }
+    if (currentPage == totalPages - 1) {
+      document.querySelectorAll(".last-page").forEach(e => e.disabled = true);
+      document.querySelectorAll(".next-page").forEach(e => e.disabled = true);
+    } else {
+      document.querySelectorAll(".last-page").forEach(e => e.disabled = false);
+      document.querySelectorAll(".next-page").forEach(e => e.disabled = false);
+    }
+    document.querySelectorAll(".page-input-field").forEach(e => e.innerHTML = json.currentPage + 1);
   } catch (error) {
     console.error(error.message);
   }

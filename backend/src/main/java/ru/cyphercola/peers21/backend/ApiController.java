@@ -2,7 +2,9 @@ package ru.cyphercola.peers21.backend;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import ru.cyphercola.peers21.backend.data.*;
+import ru.cyphercola.peers21.backend.dto.PeerDataDTO;
 import ru.cyphercola.peers21.backend.scraper.ApiScraperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -37,30 +39,24 @@ public class ApiController {
 
   @CrossOrigin
   @GetMapping("/peers")
-  List<PeerData> getPeers(@RequestParam(defaultValue = "login") String orderBy,
-                          @RequestParam(defaultValue = "true") boolean orderAscending,
-                          @RequestParam(defaultValue = "50") int peersPerPage,
-                          @RequestParam(defaultValue = "0") int page) {
+  PeerDataDTO getPeers(@RequestParam(defaultValue = "login") String orderBy,
+                       @RequestParam(defaultValue = "true") boolean orderAscending,
+                       @RequestParam(defaultValue = "30") int peersPerPage,
+                       @RequestParam(defaultValue = "0") int page,
+                       @RequestParam(required = false) Integer tribeId,
+                       @RequestParam(required = false) String wave) {
     Sort sort = Sort.by(((orderAscending) ? Sort.Direction.ASC : Sort.Direction.DESC), orderBy);
-    return baseDataRepo.findAll(PageRequest.of(page, peersPerPage, sort)).toList();
-  }
-  @GetMapping("/wave/{waveId}")
-  List<PeerData> getPeersByWave(
-    @PathVariable Integer waveId,
-    @RequestParam(defaultValue = "login") String orderBy,
-    @RequestParam(defaultValue = "50") int peersPerPage,
-    @RequestParam(defaultValue = "0") int page
-  ) {
-    return baseDataRepo.findByWave(waveId, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
-  }
-  @GetMapping("/tribe/{tribeId}")
-  List<PeerData> getPeersByTribe(
-    @PathVariable Integer tribeId,
-    @RequestParam(defaultValue = "login") String orderBy,
-    @RequestParam(defaultValue = "50") int peersPerPage,
-    @RequestParam(defaultValue = "0") int page
-  ) {
-    return baseDataRepo.findByTribeId(tribeId, PageRequest.of(page, peersPerPage, Sort.by(orderBy)));
+    Page<PeerData> peerData;
+    if (tribeId != null && wave == null) {
+      peerData = baseDataRepo.findByTribeId(tribeId, PageRequest.of(page, peersPerPage, sort));
+    } else if (tribeId == null && wave != null) {
+      peerData = baseDataRepo.findByWave(wave, PageRequest.of(page, peersPerPage, sort));
+    } else if (tribeId != null) {
+      peerData = baseDataRepo.findByTribeIdAndWave(tribeId, wave, PageRequest.of(page, peersPerPage, sort));
+    } else {
+      peerData = baseDataRepo.findAll(PageRequest.of(page, peersPerPage, sort));
+    }
+    return new PeerDataDTO(peerData.getContent(), page, peerData.getTotalPages());
   }
   @GetMapping("/update")
   void updatePeerList() {
