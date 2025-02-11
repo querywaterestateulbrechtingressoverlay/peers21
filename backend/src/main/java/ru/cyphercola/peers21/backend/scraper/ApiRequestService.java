@@ -47,24 +47,8 @@ public class ApiRequestService {
   @Autowired
   ApiRequestService(ApiRequestServiceProperties properties) {
     this.tokenEndpointUrl = properties.tokenEndpointUrl();
-    boolean error = false;
-    logger.info("retrieving API username from environment variables...");
-    String apiUsername = System.getenv(properties.envUsernameVariable());
-    if (apiUsername == null) {
-      logger.error("System variable {} is not set", properties.envUsernameVariable());
-      error = true;
-    }
-    logger.info("retrieving API password from environment variables...");
-    String apiPassword = System.getenv(properties.envPasswordVariable());
-    if (apiPassword == null) {
-      logger.error("System variable {} is not set", properties.envPasswordVariable());
-      error = true;
-    }
-    if (error) {
-      throw new RuntimeException("an error happened during the retrieval of system variables");
-    }
-    tokenRequestBody.add("username", apiUsername);
-    tokenRequestBody.add("password", apiPassword);
+    tokenRequestBody.add("username", properties.apiUsername());
+    tokenRequestBody.add("password", properties.apiPassword());
     tokenRequestBody.add("grant_type", "password");
     tokenRequestBody.add("client_id", "s21-open-api");
     reqBucket = Bucket.builder()
@@ -114,12 +98,12 @@ public class ApiRequestService {
               .retryOn(IOException.class)
               .retryOn(org.springframework.web.client.ResourceAccessException.class)
               .build();
-          return template.execute(_ -> apiClient.get()
+          return template.execute(r -> apiClient.get()
               .uri(apiBaseUrl + apiUrl)
               .accept(MediaType.APPLICATION_JSON)
               .retrieve()
               .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
-                logger.error("error {}, retrying", resp.getStatusCode());
+                logger.warn("error {}, retrying", resp.getStatusCode());
                 throw new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS);
               })
               .body(responseClass));

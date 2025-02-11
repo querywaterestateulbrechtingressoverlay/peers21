@@ -5,8 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c11a3e99-f1b1-4605-83c3-6adb12e15d93" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/vcs-1/gc.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resolvedMainClassName" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/data.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/schema.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/resources/main/templates/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ru/cyphercola/peers21/backend/ApiController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ru/cyphercola/peers21/backend/ApiController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ru/cyphercola/peers21/backend/scraper/ApiRequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ru/cyphercola/peers21/backend/scraper/ApiRequestService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ru/cyphercola/peers21/backend/scraper/ApiRequestServiceProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ru/cyphercola/peers21/backend/scraper/ApiRequestServiceProperties.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/js/peer-api.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/js/peer-api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/js/peer-api2.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

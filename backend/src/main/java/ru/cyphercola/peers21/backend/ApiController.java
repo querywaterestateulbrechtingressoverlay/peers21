@@ -37,6 +37,9 @@ public class ApiController {
     return baseDataRepo.findDistinctWaves();
   }
 
+  @GetMapping("/ping")
+  String ping() { return "pong"; }
+
   @CrossOrigin
   @GetMapping("/peers")
   PeerDataDTO getPeers(@RequestParam(defaultValue = "login") String orderBy,

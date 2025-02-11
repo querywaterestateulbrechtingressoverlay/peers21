@@ -3,8 +3,8 @@ var totalPages = 0;
 
 const apiUrl = "/api";
 
-const apiUsername = "user";
-const apiPassword = "password";
+var apiUsername = "";
+var successfulLogin = false;
 
 var tribeData = [];
 var waveData = [];
@@ -15,6 +15,25 @@ const sort = {
   column: "login",
   ascending: true
 }
+
+document.querySelector("#login-submit").addEventListener("submit", async (event) =>  {
+  event.preventDefault();
+  const username = new FormData(event.target).get("username");
+  const response = await fetch(apiUrl + "/ping", new Headers({
+    Authorization: "Basic " + btoa(apiUsername + ":password")
+  }));
+  const pong = await response.json();
+  if (response == "pong") {
+    apiUsername = username;
+    successfulLogin = true;
+    const loginElement = document.getElementById("login-div");
+    loginElement.innerHTML = "";
+
+    const userInfo = document.createElement("p");
+    p.innerHTML = "Username: " + username;
+    loginElement.appendChild(userInfo);    
+  }
+})
 
 const tableB = document.querySelectorAll("#peer-table thead td")
 tableB.forEach((e) => {
@@ -76,9 +95,8 @@ function drawOrderIndicator() {
 
 window.onload = async () => {
   headers.set(
-    "Authorization", "Basic " + btoa(apiUsername + ":" + apiPassword)
+    "Authorization", "Basic " + btoa(apiUsername + ":password")
   );
-  console.log(btoa(apiUsername + ":" + apiPassword));
   await populateFilters();
   await getPeerData(currentPage, "login", true);
   // currentPage = pagination.currentPage;
