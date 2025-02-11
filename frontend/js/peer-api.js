@@ -16,21 +16,24 @@ const sort = {
   ascending: true
 }
 
-document.querySelector("#login-submit").addEventListener("submit", async (event) =>  {
+document.querySelector("#login-form").addEventListener("submit", async (event) =>  {
   event.preventDefault();
   const username = new FormData(event.target).get("username");
-  const response = await fetch(apiUrl + "/ping", new Headers({
-    Authorization: "Basic " + btoa(apiUsername + ":password")
-  }));
-  const pong = await response.json();
-  if (response == "pong") {
+  const response = await fetch(apiUrl + "/ping", {
+    headers: {
+      Authorization: "Basic " + btoa(username + ":password")
+    }
+  });
+  const pong = await response.text();
+  console.log(pong);
+  if (pong == "pong") {
     apiUsername = username;
     successfulLogin = true;
     const loginElement = document.getElementById("login-div");
     loginElement.innerHTML = "";
 
     const userInfo = document.createElement("p");
-    p.innerHTML = "Username: " + username;
+    userInfo.innerHTML = "Username: " + username;
     loginElement.appendChild(userInfo);    
   }
 })

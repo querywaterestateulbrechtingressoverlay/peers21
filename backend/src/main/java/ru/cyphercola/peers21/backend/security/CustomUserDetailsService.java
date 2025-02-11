@@ -20,7 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
   PasswordEncoder encoder  = PasswordEncoderFactories.createDelegatingPasswordEncoder();
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    LoggerFactory.getLogger(CustomUserDetailsService.class).info("load user by username");
+    LoggerFactory.getLogger(CustomUserDetailsService.class).info("loading user {} by username", username);
     var apiUser = apiUserRepository.findFirst1ByLogin(username);
     if (apiUser.isPresent()) {
       LoggerFactory.getLogger(CustomUserDetailsService.class).info("api user");
