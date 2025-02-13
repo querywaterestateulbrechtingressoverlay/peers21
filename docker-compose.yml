@@ -5,22 +5,25 @@ services:
     image: postgres:latest
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "--quiet"]
-      interval: 5s
+      interval: 30s
       timeout: 5s
-      retries: 20
-  backend:
-    container_name: backend
+      retries: 3
+  data-layer:
+    container_name: data-layer
     depends_on:
-     - "database"
-    env_file: backend.env
+      database:
+        condition: service_healthy
+    env_file: data-layer.env
     build:
-      context: ./backend
-      dockerfile: ../backend.Dockerfile
+      context: ./backend/data-layer
+      dockerfile: ../../data-layer.Dockerfile
     restart: always
+    ports:
+     - "8080:8080"
   frontend:
     container_name: frontend
     depends_on:
-     - "backend"
+     - "data-layer"
     build:
       context: .
       dockerfile: frontend.Dockerfile

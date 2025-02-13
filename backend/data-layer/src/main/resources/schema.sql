@@ -1,7 +1,3 @@
-CREATE TABLE IF NOT EXISTS intensive_data(
-    id int PRIMARY KEY,
-    start_date DATE,
-    end_date DATE);
 CREATE TABLE IF NOT EXISTS tribe_data(
     id SERIAL PRIMARY KEY,
     tribe_id INT UNIQUE,
@@ -10,7 +6,6 @@ CREATE TABLE IF NOT EXISTS peer_data(
     id SERIAL PRIMARY KEY,
     login VARCHAR(255) UNIQUE,
     wave VARCHAR(255),
-    intensive INT,
     tribe_id INT,
     state VARCHAR(255),
     tribe_points INT,
@@ -18,8 +13,7 @@ CREATE TABLE IF NOT EXISTS peer_data(
     peer_review_points INT,
     code_review_points INT,
     coins INT,
-    FOREIGN KEY (tribe_id) REFERENCES tribe_data(tribe_id),
-    FOREIGN KEY (intensive) REFERENCES intensive_data(id)
+    FOREIGN KEY (tribe_id) REFERENCES tribe_data(tribe_id)
     );
 CREATE TABLE IF NOT EXISTS api_users(
     id SERIAL PRIMARY KEY,

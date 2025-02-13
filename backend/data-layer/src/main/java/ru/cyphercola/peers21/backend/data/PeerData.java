@@ -3,6 +3,7 @@ package ru.cyphercola.peers21.backend.data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+import ru.cyphercola.peers21.backend.dto.PeerDataDTO;
 
 @Table("peer_data")
 public record PeerData(
@@ -13,8 +14,6 @@ public record PeerData(
     String login,
     @Column("wave")
     String wave,
-    @Column("intensive")
-    int intensive,
     @Column("tribe_id")
     int tribeId,
     @Column("state")
@@ -30,19 +29,7 @@ public record PeerData(
     @Column("coins")
     int coins
 ) {
-//    public static PeerData createFromDTO(ParticipantDTO peerDTO, ParticipantPointsDTO ptsDTO, int intensive, int tribeId, int tribePoints) {
-//        return new PeerData(
-//          null, peerDTO.login(), peerDTO.className(),
-//          intensive, tribeId, peerDTO.status(), tribePoints,
-//          peerDTO.expValue(), ptsDTO.peerReviewPoints(),
-//          ptsDTO.codeReviewPoints(), ptsDTO.coins()
-//        );
-//    }
-//    public PeerData updateFromDTO(ParticipantDTO peerDTO, ParticipantPointsDTO ptsDTO, int tribePoints) {
-//        return new PeerData(
-//          id, login, peerDTO.className(), intensive, tribeId,
-//          peerDTO.status(), tribePoints, peerDTO.expValue(),
-//          ptsDTO.peerReviewPoints(), ptsDTO.codeReviewPoints(), ptsDTO.coins()
-//        );
-//    }
+  public PeerDataDTO toDTO() {
+    return new PeerDataDTO(login, wave, tribeId, state.toString(), tribePoints, expValue, peerReviewPoints, codeReviewPoints, coins);
+  }
 }

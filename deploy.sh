@@ -1,2 +1,2 @@
-cd backend && ./gradlew build -x test
+cd backend/data-layer/ && ./gradlew build -x test
 docker compose up
