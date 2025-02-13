@@ -5,8 +5,6 @@ import ru.cyphercola.peers21.backend.data.PeerData;
 import java.util.List;
 
 public record PeerDataDTO(
-  List<PeerData> peerData,
-  int currentPage,
-  int totalPages
+  List<PeerData> peerData
 ) {
 }

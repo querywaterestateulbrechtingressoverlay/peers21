@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import ru.cyphercola.peers21.backend.dto.PeerDataDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +25,6 @@ public interface PeerDataRepository extends CrudRepository<PeerData, Integer>, P
 
   Page<PeerData> findByTribeId(int tribeId, Pageable page);
   Page<PeerData> findByTribeIdAndWave(int tribeId, String wave, Pageable page);
+
+  void upsert(PeerDataDTO peerDataDTO);
 }
