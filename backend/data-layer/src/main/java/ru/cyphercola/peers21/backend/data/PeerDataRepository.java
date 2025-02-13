@@ -25,6 +25,4 @@ public interface PeerDataRepository extends CrudRepository<PeerData, Integer>, P
 
   Page<PeerData> findByTribeId(int tribeId, Pageable page);
   Page<PeerData> findByTribeIdAndWave(int tribeId, String wave, Pageable page);
-
-  void upsert(PeerDataDTO peerDataDTO);
 }
