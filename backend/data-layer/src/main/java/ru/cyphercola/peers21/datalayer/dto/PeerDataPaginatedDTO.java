@@ -1,4 +1,4 @@
-package ru.cyphercola.peers21.backend.dto;
+package ru.cyphercola.peers21.datalayer.dto;
 
 import java.util.List;
 

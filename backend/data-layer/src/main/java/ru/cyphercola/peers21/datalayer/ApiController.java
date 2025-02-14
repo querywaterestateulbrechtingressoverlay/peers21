@@ -1,27 +1,26 @@
-package ru.cyphercola.peers21.backend;
+package ru.cyphercola.peers21.datalayer;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import ru.cyphercola.peers21.backend.data.*;
+import org.springframework.web.server.ResponseStatusException;
+import ru.cyphercola.peers21.datalayer.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-import ru.cyphercola.peers21.backend.dto.PeerDataDTO;
+import ru.cyphercola.peers21.datalayer.dto.PeerDataDTO;
+import ru.cyphercola.peers21.datalayer.dto.TribeDataDTO;
 
 @RestController
 @CrossOrigin
 @RequestMapping("api")
 public class ApiController {
-  Logger logger = LoggerFactory.getLogger(ApiController.class);
+  @Autowired
+  TribeDataRepository tribeRepo;
   @Autowired
   PeerDataRepository peerRepo;
 
@@ -31,12 +30,28 @@ public class ApiController {
   }
 
   @GetMapping("/tribes")
-  List<TribeData> getDistinctTribes() {
-    return peerRepo.findDistinctTribes();
+  Iterable<TribeData> getTribes() {
+    return tribeRepo.findAll();
+  }
+  @DeleteMapping("/tribes")
+  void deleteTribe(@RequestParam Integer tribeId) {
+    tribeRepo.deleteById(
+      tribeRepo
+        .findFirst1ByTribeId(tribeId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tribe with id " + tribeId + " was not found"))
+        .id());
+  }
+  @PutMapping("/tribes")
+  void insertOrUpdateTribes(@RequestBody List<TribeDataDTO> tribeDataDTOS) {
+    for (var tribeDataDTO: tribeDataDTOS) {
+      tribeRepo.save(tribeDataDTO.toEntity(tribeRepo
+        .findFirst1ByTribeId(tribeDataDTO.id())
+        .map(TribeData::id).orElse(null)));
+    }
   }
 
   @GetMapping("/waves")
-  List<String> getDistinctWaves() {
+  List<String> getWaves() {
     return peerRepo.findDistinctWaves();
   }
 
@@ -80,16 +95,20 @@ public class ApiController {
 
     return new ResponseEntity<>(peerData.getContent().stream().map(PeerData::toDTO).toList(), headers, HttpStatus.OK);
   }
-  @PutMapping("/peer/{login}")
-  void insertOrUpdatePeer(@PathVariable String login, @RequestBody PeerDataDTO peerDataDTO) {
-    logger.info(peerDataDTO.login());
-    logger.info(peerDataDTO.wave());
-    logger.info(peerDataDTO.tribeId().toString());
-    if (!Objects.equals(login, peerDataDTO.login())) {
-      logger.error("lol");
-    } else {
-      Optional<PeerData> existingEntry = peerRepo.findFirst1ByLogin(peerDataDTO.login());
-      peerRepo.save(peerDataDTO.toEntity(existingEntry.map(PeerData::id).orElse(null)));
+  @DeleteMapping("/peers")
+  void deletePeer(@RequestParam String peerLogin) {
+    peerRepo.deleteById(
+      peerRepo
+        .findFirst1ByLogin(peerLogin)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Peer with login " + peerLogin + " was not found"))
+        .id());
+  }
+  @PutMapping("/peers")
+  void putPeers(@RequestBody List<PeerDataDTO> peerDataDTOS) {
+    for (var peerDataDTO: peerDataDTOS) {
+      peerRepo.save(peerDataDTO.toEntity(peerRepo
+        .findFirst1ByLogin(peerDataDTO.login())
+        .map(PeerData::id).orElse(null)));
     }
   }
 }

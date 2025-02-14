@@ -1,4 +1,4 @@
-package ru.cyphercola.peers21.backend.data;
+package ru.cyphercola.peers21.datalayer.data;
 
 import org.springframework.data.repository.CrudRepository;
 
