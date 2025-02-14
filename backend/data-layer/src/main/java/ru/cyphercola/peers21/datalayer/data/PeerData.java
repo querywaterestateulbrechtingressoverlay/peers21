@@ -1,9 +1,9 @@
-package ru.cyphercola.peers21.backend.data;
+package ru.cyphercola.peers21.datalayer.data;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-import ru.cyphercola.peers21.backend.dto.PeerDataDTO;
+import ru.cyphercola.peers21.datalayer.dto.PeerDataDTO;
 
 @Table("peer_data")
 public record PeerData(
