@@ -1,5 +1,6 @@
 package ru.cyphercola.peers21.datalayer.security;
 
+import org.slf4j.Logger;
 import ru.cyphercola.peers21.datalayer.data.ApiUserRepository;
 import ru.cyphercola.peers21.datalayer.data.PeerDataRepository;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 public class CustomUserDetailsService implements UserDetailsService {
+  Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
   @Autowired
   PeerDataRepository peerDataRepository;
   @Autowired
@@ -20,13 +22,10 @@ public class CustomUserDetailsService implements UserDetailsService {
   PasswordEncoder encoder  = PasswordEncoderFactories.createDelegatingPasswordEncoder();
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//    System.out.println(username);
     var apiUser = apiUserRepository.findFirst1ByLogin(username);
-    LoggerFactory.getLogger(CustomUserDetailsService.class).info("loading user {} by username", username);
-    LoggerFactory.getLogger(CustomUserDetailsService.class).info("asdf");
-    LoggerFactory.getLogger(CustomUserDetailsService.class).info("asdf");
-    LoggerFactory.getLogger(CustomUserDetailsService.class).info("id = " + apiUser.get().id().toString());
     if (apiUser.isPresent()) {
-      LoggerFactory.getLogger(CustomUserDetailsService.class).info("api user");
+      logger.info("api user {}, role {}", apiUser.get().login(), apiUser.get().role());
       return User.builder()
         .username(apiUser.get().login())
         .password(encoder.encode(apiUser.get().password()))
@@ -35,7 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     } else {
       var peerData = peerDataRepository.findFirst1ByLogin(username);
       if (peerData.isPresent()) {
-        LoggerFactory.getLogger(CustomUserDetailsService.class).info("peer user");
+        LoggerFactory.getLogger(CustomUserDetailsService.class).info("peer user {}", peerData.get().login());
         return User.builder()
           .username(peerData.get().login())
           .password(encoder.encode("password"))
