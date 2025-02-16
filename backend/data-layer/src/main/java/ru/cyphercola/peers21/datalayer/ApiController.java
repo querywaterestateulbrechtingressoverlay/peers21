@@ -1,6 +1,7 @@
 package ru.cyphercola.peers21.datalayer;
 
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
@@ -13,7 +14,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import ru.cyphercola.peers21.datalayer.dto.PeerDataDTO;
+import ru.cyphercola.peers21.datalayer.dto.PeerDataDTOList;
 import ru.cyphercola.peers21.datalayer.dto.TribeDataDTO;
+import ru.cyphercola.peers21.datalayer.dto.TribeDataDTOList;
+
+import static org.springframework.http.HttpHeaders.LINK;
 
 @RestController
 @CrossOrigin
@@ -30,8 +35,8 @@ public class ApiController {
   }
 
   @GetMapping("/tribes")
-  Iterable<TribeData> getTribes() {
-    return tribeRepo.findAll();
+  TribeDataDTOList getTribes() {
+    return new TribeDataDTOList(StreamSupport.stream(tribeRepo.findAll().spliterator(), false).map(TribeData::toDTO).toList());
   }
   @DeleteMapping("/tribes")
   void deleteTribe(@RequestParam Integer tribeId) {
@@ -42,11 +47,15 @@ public class ApiController {
         .id());
   }
   @PutMapping("/tribes")
-  void insertOrUpdateTribes(@RequestBody List<TribeDataDTO> tribeDataDTOS) {
-    for (var tribeDataDTO: tribeDataDTOS) {
-      tribeRepo.save(tribeDataDTO.toEntity(tribeRepo
-        .findFirst1ByTribeId(tribeDataDTO.id())
-        .map(TribeData::id).orElse(null)));
+  void insertOrUpdateTribes(@RequestBody TribeDataDTOList tribeDataDTOs) {
+    if (tribeDataDTOs.tribes() != null) {
+      for (var tribeDataDTO : tribeDataDTOs.tribes()) {
+        tribeRepo.save(tribeDataDTO.toEntity(tribeRepo
+          .findFirst1ByTribeId(tribeDataDTO.id())
+          .map(TribeData::id).orElse(null)));
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -56,7 +65,7 @@ public class ApiController {
   }
 
   @GetMapping("/peers")
-  ResponseEntity<List<PeerDataDTO>> getPeers(@RequestParam(defaultValue = "login") String orderBy,
+  ResponseEntity<PeerDataDTOList> getPeers(@RequestParam(defaultValue = "login") String orderBy,
                                            @RequestParam(defaultValue = "true") boolean orderAscending,
                                            @RequestParam(defaultValue = "30") int peersPerPage,
                                            @RequestParam(defaultValue = "0") int page,
@@ -73,27 +82,22 @@ public class ApiController {
         default -> peerRepo.findByTribeIdAndWave(tribeId, wave, PageRequest.of(page, peersPerPage, sort));
       };
     };
-    String formatString = "/peers?orderBy=" + orderBy
-        + "&orderAscending=" + orderAscending
-        + "&peersPerPage=" + peersPerPage
-        + "&page=%d"
-        + ((tribeId == null) ? "" : ("&tribeId=" + tribeId))
-        + ((wave == null) ? "" : ("&wave=" + wave));
-    StringBuilder navigationLinks = new StringBuilder();
+    HttpHeaders headers = new HttpHeaders();
+    String formatString = String.format("/peers?orderBy=%s&orderAscending=%s&peersPerPage=%d&page=%%d%s%s",
+      orderBy,
+      orderAscending,
+      peersPerPage,
+      (tribeId == null) ? "" : ("&tribeId=" + tribeId),
+      (wave == null) ? "" : ("&wave=" + wave));
     if (peerData.hasPrevious()) {
-      navigationLinks
-          .append("<").append(String.format(formatString, 0)).append(">; rel=first,")
-          .append("<").append(String.format(formatString, page - 1)).append(">; rel=previous");
+      headers.add(HttpHeaders.LINK, "<" + String.format(formatString, 0) + ">; rel=first");
+      headers.add(HttpHeaders.LINK, "<" + String.format(formatString, page - 1) + ">; rel=previous");
     }
     if (peerData.hasNext()) {
-      navigationLinks
-          .append("<").append(String.format(formatString, page + 1)).append(">; rel=next,")
-          .append("<").append(String.format(formatString, peerData.getTotalPages() - 1)).append(">; rel=last");
+      headers.add(HttpHeaders.LINK, "<" + String.format(formatString, page + 1) + ">; rel=next");
+      headers.add(HttpHeaders.LINK, "<" + String.format(formatString, peerData.getTotalPages() - 1) + ">; rel=last");
     }
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Link", navigationLinks.toString());
-
-    return new ResponseEntity<>(peerData.getContent().stream().map(PeerData::toDTO).toList(), headers, HttpStatus.OK);
+    return new ResponseEntity<>(new PeerDataDTOList(peerData.getContent().stream().map(PeerData::toDTO).toList()), headers, HttpStatus.OK);
   }
   @DeleteMapping("/peers")
   void deletePeer(@RequestParam String peerLogin) {
@@ -104,11 +108,15 @@ public class ApiController {
         .id());
   }
   @PutMapping("/peers")
-  void putPeers(@RequestBody List<PeerDataDTO> peerDataDTOS) {
-    for (var peerDataDTO: peerDataDTOS) {
-      peerRepo.save(peerDataDTO.toEntity(peerRepo
-        .findFirst1ByLogin(peerDataDTO.login())
-        .map(PeerData::id).orElse(null)));
+  void putPeers(@RequestBody PeerDataDTOList peerDataDTOs) {
+    if (peerDataDTOs.peers() != null) {
+      for (var peerDataDTO: peerDataDTOs.peers()) {
+        peerRepo.save(peerDataDTO.toEntity(peerRepo
+          .findFirst1ByLogin(peerDataDTO.login())
+          .map(PeerData::id).orElse(null)));
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
   }
 }
