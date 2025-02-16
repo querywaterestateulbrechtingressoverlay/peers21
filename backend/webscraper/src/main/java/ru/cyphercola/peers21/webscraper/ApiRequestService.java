@@ -1,6 +1,5 @@
-package ru.cyphercola.peers21.backend.scraper;
+package ru.cyphercola.peers21.webscraper;
 
-import ru.cyphercola.peers21.backend.scraper.dto.ApiKeyResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,7 @@ import io.github.bucket4j.Bucket;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import ru.cyphercola.peers21.webscraper.dto.ApiKeyResponse;
 
 import java.io.IOException;
 import java.time.Duration;

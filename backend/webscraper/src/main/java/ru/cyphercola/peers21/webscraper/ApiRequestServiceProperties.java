@@ -1,4 +1,4 @@
-package ru.cyphercola.peers21.backend.scraper;
+package ru.cyphercola.peers21.webscraper;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;

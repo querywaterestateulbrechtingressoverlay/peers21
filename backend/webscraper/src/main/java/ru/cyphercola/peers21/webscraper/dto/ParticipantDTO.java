@@ -1,6 +1,4 @@
-package ru.cyphercola.peers21.backend.scraper.dto;
-
-import ru.cyphercola.peers21.backend.data.PeerState;
+package ru.cyphercola.peers21.webscraper.dto;
 
 public record ParticipantDTO(
     String login,
@@ -9,5 +7,5 @@ public record ParticipantDTO(
     int expValue,
     int expToNextLevel,
     ParticipantCampusDTO campus,
-    PeerState status) {
+    String status) {
 }
