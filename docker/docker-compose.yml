@@ -8,6 +8,8 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    ports:
+     - "5432:5432"
   data-layer:
     container_name: data-layer
     depends_on:
@@ -15,18 +17,27 @@ services:
         condition: service_healthy
     env_file: data-layer.env
     build:
-      context: ./backend/data-layer
-      dockerfile: ../../data-layer.Dockerfile
+      context: ../backend/data-layer
+      dockerfile: ../../docker/data-layer.Dockerfile
     restart: always
     ports:
      - "8080:8080"
+  webscraper:
+    container_name: webscraper
+    depends_on:
+     - "data-layer"
+    env_file: webscraper.env
+    build:
+      context: ../backend/webscraper
+      dockerfile: ../../docker/webscraper.Dockerfile
+    restart: always
   frontend:
     container_name: frontend
     depends_on:
      - "data-layer"
     build:
-      context: .
-      dockerfile: frontend.Dockerfile
+      context: ../
+      dockerfile: ./docker/frontend.Dockerfile
     ports:
      - "80:80"
 
