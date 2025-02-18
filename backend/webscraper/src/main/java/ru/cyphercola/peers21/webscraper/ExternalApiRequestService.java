@@ -24,17 +24,16 @@ import java.util.TimeZone;
 import java.util.concurrent.*;
 
 @Service
-@EnableConfigurationProperties(ApiRequestServiceProperties.class)
-public class ApiRequestService {
+@EnableConfigurationProperties(ExternalApiRequestServiceProperties.class)
+public class ExternalApiRequestService {
   private final String tokenEndpointUrl;
   private final String apiBaseUrl;
   private final Bucket reqBucket;
-  private final Logger logger = LoggerFactory.getLogger(ApiRequestService.class);
+  private final Logger logger = LoggerFactory.getLogger(ExternalApiRequestService.class);
   private final LinkedMultiValueMap<String, String> tokenRequestBody = new LinkedMultiValueMap<>();
   private long keyExpiryDate = System.currentTimeMillis();
   private RestClient apiClient;
 
-  private final ExecutorService requestExecutor;
   @Autowired
   private RestClient.Builder restClientBuilder;
 
@@ -45,7 +44,7 @@ public class ApiRequestService {
   }
 
   @Autowired
-  ApiRequestService(ApiRequestServiceProperties properties) {
+  ExternalApiRequestService(ExternalApiRequestServiceProperties properties) {
     this.tokenEndpointUrl = properties.tokenEndpointUrl();
     tokenRequestBody.add("username", properties.apiUsername());
     tokenRequestBody.add("password", properties.apiPassword());
@@ -57,7 +56,6 @@ public class ApiRequestService {
         .refillGreedy(properties.rateLimit(), Duration.ofSeconds(1)))
       .build();
     apiBaseUrl = properties.apiBaseUrl();
-    requestExecutor = Executors.newFixedThreadPool(properties.rateLimit());
   }
   public void updateApiKey() {
     if (System.currentTimeMillis() >= keyExpiryDate) {
@@ -86,34 +84,30 @@ public class ApiRequestService {
       apiClient = apiClient.mutate().defaultHeader("Authorization", "Bearer " + keyEntity.accessToken()).build();
     }
   }
-  public <T> T request(Class<T> responseClass, String apiUrl) {
+  public <T> T get(Class<T> responseClass, String apiUrl) {
     updateApiKey();
     rebuildClient();
-    Future<T> f = requestExecutor.submit(() -> {
-      while (true) {
-        if (reqBucket.tryConsume(1)) {
-          RetryTemplate template = RetryTemplate.builder()
-              .maxAttempts(10)
-              .retryOn(HttpClientErrorException.class)
-              .retryOn(IOException.class)
-              .retryOn(org.springframework.web.client.ResourceAccessException.class)
-              .build();
-          return template.execute(r -> apiClient.get()
-              .uri(apiBaseUrl + apiUrl)
-              .accept(MediaType.APPLICATION_JSON)
-              .retrieve()
-              .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
-                logger.warn("error {}, retrying", resp.getStatusCode());
-                throw new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS);
-              })
-              .body(responseClass));
-        }
+    T result;
+    while (true) {
+      if (reqBucket.tryConsume(1)) {
+        RetryTemplate template = RetryTemplate.builder()
+          .maxAttempts(10)
+          .retryOn(HttpClientErrorException.class)
+          .retryOn(IOException.class)
+          .retryOn(org.springframework.web.client.ResourceAccessException.class)
+          .build();
+        result = template.execute(r -> apiClient.get()
+          .uri(apiBaseUrl + apiUrl)
+          .accept(MediaType.APPLICATION_JSON)
+          .retrieve()
+          .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
+            logger.warn("error {}, retrying", resp.getStatusCode());
+            throw new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS);
+          })
+          .body(responseClass));
+        break;
       }
-    });
-    try {
-      return f.get();
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
     }
+    return result;
   }
 }

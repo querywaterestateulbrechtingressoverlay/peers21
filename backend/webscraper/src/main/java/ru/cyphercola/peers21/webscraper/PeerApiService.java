@@ -1,5 +1,6 @@
 package ru.cyphercola.peers21.webscraper;
 
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestClient;
 import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTO;
 import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTOList;
@@ -13,21 +14,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import ru.cyphercola.peers21.webscraper.exception.ExternalServerErrorException;
 
 import java.util.*;
 
 @EnableScheduling
 @Service
-public class ApiScraperService {
-  Logger logger = LoggerFactory.getLogger(ApiScraperService.class);
+public class PeerApiService {
+  Logger logger = LoggerFactory.getLogger(PeerApiService.class);
   @Autowired
-  ApiRequestService requestService;
+  ExternalApiRequestService requestService;
+  @Autowired
+  InternalApiRequestService internalRequestService;
+  @Autowired
+  WebScraperService webScraper;
 
   String dataLayerApiURI = "/api";
   String dataLayerApiUsername = "admin";
   String dataLayerApiPassword = "adminpassword";
-  @Autowired
   RestClient restClient;
+  public PeerApiService(@Autowired RestClient.Builder builder) {
+    restClient = builder.build();
+  }
 
   void updateTribes(List<TribeDataDTO> tribes) {
     restClient.put()
@@ -53,7 +61,7 @@ public class ApiScraperService {
   public List<TribeDataDTO> getTribes(String campusId) {
     logger.info("retrieving tribes from campus {}", campusId);
     List<TribeDataDTO> tribes = requestService
-        .request(CoalitionsDTO.class, "/campuses/" + campusId + "/coalitions")
+        .get(CoalitionsDTO.class, "/campuses/" + campusId + "/coalitions")
         .coalitions()
         .stream()
         .map((dto) -> new TribeDataDTO(dto.coalitionId(), dto.name()))
@@ -69,7 +77,7 @@ public class ApiScraperService {
     while (true) {
     logger.info("page {}", page);
       ParticipantLoginsDTO participantLogins = requestService
-          .request(ParticipantLoginsDTO.class, "/coalitions/" + tribe.id() + "/participants?limit=50&offset=" + 50 * page++);
+          .get(ParticipantLoginsDTO.class, "/coalitions/" + tribe.id() + "/participants?limit=50&offset=" + 50 * page++);
       if (participantLogins.participants().isEmpty()) {
         break;
       } else {
@@ -85,7 +93,7 @@ public class ApiScraperService {
   }
 
   public void initPeerList() {
-    String yktId = requestService.request(CampusesDTO.class, "/campuses").campuses()
+    String yktId = requestService.get(CampusesDTO.class, "/campuses").campuses()
         .stream()
         .filter(campus -> campus.shortName().equals("21 Yakutsk"))
         .findFirst()
@@ -100,10 +108,10 @@ public class ApiScraperService {
     }
     var peers = new ArrayList<PeerDataDTO>();
     for (var peerLoginAndTribe : peerTribes.entrySet()) {
-      ParticipantDTO peerDTO = requestService.request(ParticipantDTO.class, String.format("participants/%s", peerLoginAndTribe.getKey()));
+      ParticipantDTO peerDTO = requestService.get(ParticipantDTO.class, String.format("participants/%s", peerLoginAndTribe.getKey()));
       if (Objects.equals(peerDTO.status(), "ACTIVE") || Objects.equals(peerDTO.status(), "FROZEN")) {
         logger.info("saving peer {}...", peerLoginAndTribe.getKey());
-        ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, String.format("/participants/%s/points", peerLoginAndTribe.getKey()));
+        ParticipantPointsDTO peerPointsDTO = requestService.get(ParticipantPointsDTO.class, String.format("/participants/%s/points", peerLoginAndTribe.getKey()));
         peers.add(
           new PeerDataDTO(
             peerDTO.login(),
@@ -127,9 +135,18 @@ public class ApiScraperService {
 
   PeerDataDTO updatePeer(PeerDataDTO peer) {
     logger.info("updating peer {}", peer.login());
-    ParticipantDTO peerDTO = requestService.request(ParticipantDTO.class, String.format("/participants/%s", peer.login()));
-    ParticipantPointsDTO peerPointsDTO = requestService.request(ParticipantPointsDTO.class, String.format("/participants/%s/points", peer.login()));
-    int tribePoints = webCrawler.getTribePoints(peer.login());
+    ParticipantDTO peerDTO = requestService.get(ParticipantDTO.class, String.format("/participants/%s", peer.login()));
+    ParticipantPointsDTO peerPointsDTO = requestService.get(ParticipantPointsDTO.class, String.format("/participants/%s/points", peer.login()));
+
+    int tribePoints;
+
+    RetryTemplate template = RetryTemplate.builder()
+      .maxAttempts(3)
+      .retryOn(ExternalServerErrorException.class)
+      .build();
+
+    tribePoints = template.execute(r -> webScraper.parseTribePoints(peer.login()));
+
     return new PeerDataDTO(
       peer.login(),
       peerDTO.parallelName(),
@@ -143,15 +160,15 @@ public class ApiScraperService {
     );
   }
 
-  @Scheduled(fixedRateString = "PT10M")
+  @Scheduled(fixedRateString = "PT15M")
   public void updatePeerList() {
     logger.info("updating peer info...");
-    var peerList = peerRepo.findAll();
-    var changedPeerData = new ArrayList<PeerData>();
-    for (PeerData peer : peerList) {
+    var peerList = internalRequestService.get(PeerDataDTOList.class,"/peers");
+    var changedPeerData = new ArrayList<PeerDataDTO>();
+    for (PeerDataDTO peer : peerList.peers()) {
       changedPeerData.add(updatePeer(peer));
     }
-    peerRepo.saveAll(changedPeerData);
+    internalRequestService.post(Void.class, PeerDataDTOList.class, "/peers");
     logger.info("update finished, updated {} peers", changedPeerData.size());
   }
 }

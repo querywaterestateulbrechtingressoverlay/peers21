@@ -27,7 +27,7 @@ public class AppSecurityConfig {
       .authorizeHttpRequests((auth) -> auth
         .requestMatchers(HttpMethod.GET, "/ error").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/error").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/**").hasRole("USER")
+        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER", "ADMIN")
         .requestMatchers(HttpMethod.PUT,"/api/**").hasRole("ADMIN")
         .requestMatchers(HttpMethod.DELETE,"/api/**").hasRole("ADMIN")
         .anyRequest().permitAll())

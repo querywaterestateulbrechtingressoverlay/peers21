@@ -1,0 +1,56 @@
+package ru.cyphercola.peers21.webscraper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.MediaType;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClient;
+
+import java.io.IOException;
+import java.util.Base64;
+
+@Service
+@EnableConfigurationProperties(InternalApiRequestServiceProperties.class)
+public class InternalApiRequestService {
+  Logger logger = LoggerFactory.getLogger(InternalApiRequestService.class);
+  private final String authorization;
+  private final String apiBaseUrl;
+  private RestClient apiClient;
+
+  @Autowired
+  InternalApiRequestService(@Autowired RestClient.Builder rcb, InternalApiRequestServiceProperties properties) {
+    this.authorization = "Basic " + Base64.getEncoder().encodeToString((properties.apiUsername() + ":" + properties.apiPassword()).getBytes());
+    this.apiBaseUrl = properties.apiBaseUrl();
+    apiClient = rcb
+      .defaultHeader("Authorization", authorization)
+      .build();
+  }
+  public <T> T get(Class<T> responseClass, String apiUrl) {
+    T result;
+    RetryTemplate template = RetryTemplate.builder()
+      .maxAttempts(10)
+      .retryOn(HttpClientErrorException.class)
+      .retryOn(IOException.class)
+      .retryOn(org.springframework.web.client.ResourceAccessException.class)
+      .build();
+    result = template.execute(r -> apiClient.get()
+      .uri(apiBaseUrl + apiUrl)
+      .accept(MediaType.APPLICATION_JSON)
+      .retrieve()
+      .body(responseClass));
+    return result;
+  }
+  public <T, U> T post(Class<T> responseClass, U requestBody, String apiUrl) {
+    T result;
+    result = apiClient.post()
+      .uri(apiBaseUrl + apiUrl)
+      .body(requestBody)
+      .retrieve()
+      .body(responseClass);
+    return result;
+  }
+}
