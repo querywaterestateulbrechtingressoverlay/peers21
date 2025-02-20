@@ -44,13 +44,14 @@ public class InternalApiRequestService {
       .body(responseClass));
     return result;
   }
-  public <T, U> T post(Class<T> responseClass, U requestBody, String apiUrl) {
-    T result;
-    result = apiClient.post()
+  public <U> void put(U requestBody, String apiUrl) {
+    var asd = apiClient.put()
       .uri(apiBaseUrl + apiUrl)
+      .header("Authorization", authorization)
       .body(requestBody)
       .retrieve()
-      .body(responseClass);
-    return result;
+      .toBodilessEntity();
+    System.out.println(asd.getStatusCode());
+    logger.info(asd.getStatusCode().toString());
   }
 }
