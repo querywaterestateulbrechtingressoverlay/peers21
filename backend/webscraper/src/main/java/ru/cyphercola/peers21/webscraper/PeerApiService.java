@@ -30,8 +30,8 @@ public class PeerApiService {
   WebScraperService webScraper;
 
   String dataLayerApiURI = "/api";
-  String dataLayerApiUsername = "admin";
-  String dataLayerApiPassword = "adminpassword";
+  String dataLayerApiUsername = "user";
+  String dataLayerApiPassword = "userpassword";
   RestClient restClient;
   public PeerApiService(@Autowired RestClient.Builder builder) {
     restClient = builder.build();
@@ -164,11 +164,12 @@ public class PeerApiService {
   public void updatePeerList() {
     logger.info("updating peer info...");
     var peerList = internalRequestService.get(PeerDataDTOList.class,"/peers");
+    peerList.peers().forEach(System.out::println);
     var changedPeerData = new ArrayList<PeerDataDTO>();
     for (PeerDataDTO peer : peerList.peers()) {
       changedPeerData.add(updatePeer(peer));
     }
-    internalRequestService.post(Void.class, PeerDataDTOList.class, "/peers");
+    internalRequestService.put(new PeerDataDTOList(changedPeerData), "/peers");
     logger.info("update finished, updated {} peers", changedPeerData.size());
   }
 }
