@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.List;
 
 public interface ApiUserAuthorityRepository extends CrudRepository<ApiUserAuthority, Integer> {
-  List<ApiUserAuthority> findByApiUserLogin(String login);
+  List<ApiUserAuthority> findByApiUserLogin(String apiUserLogin);
 }

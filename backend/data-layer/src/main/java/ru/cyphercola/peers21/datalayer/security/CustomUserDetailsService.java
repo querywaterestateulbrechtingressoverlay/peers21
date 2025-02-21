@@ -46,17 +46,14 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     logger.info("loading user {}", username);
     var apiUser = apiUserRepository.findFirst1ByLogin(username);
-    logger.info(apiUser.isPresent() ? "user " + username + " found" : "user not found");
     if (apiUser.isPresent()) {
-      String[] userAuthorities = (String[]) authorityRepository.findByApiUserLogin(username)
-          .stream()
-          .map(ApiUserAuthority::authority)
-          .toArray();
-      logger.info("new UserDetails, auth {}", String.join(" ", userAuthorities));
+      List<ApiUserAuthority> authorities = authorityRepository.findByApiUserLogin(username);
       return User.builder()
         .username(apiUser.get().login())
         .password(encoder.encode(apiUser.get().password()))
-        .authorities(userAuthorities)
+        .authorities(authorities.stream()
+          .map(apiauth -> new SimpleGrantedAuthority(apiauth.authority()))
+          .toList())
         .build();
     } else {
       logger.info("user {} not found in the api user database", username);
