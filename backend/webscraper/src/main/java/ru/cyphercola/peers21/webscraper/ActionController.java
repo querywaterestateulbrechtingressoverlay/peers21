@@ -14,4 +14,8 @@ public class ActionController {
     LoggerFactory.getLogger(ActionController.class).info("init");
     pas.initPeerList();
   }
+  @GetMapping("/update")
+  void update() {
+    pas.updatePeerList();
+  }
 }

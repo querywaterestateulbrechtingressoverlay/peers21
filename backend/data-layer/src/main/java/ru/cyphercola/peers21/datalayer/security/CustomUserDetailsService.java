@@ -119,6 +119,8 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
   @Override
   public void afterPropertiesSet() throws Exception {
     logger.info("creating a initial user {} with password {}", initialCredentials.username(), initialCredentials.password());
-    createUser(new User(initialCredentials.username(), initialCredentials.password(), List.of(new SimpleGrantedAuthority("ADMIN"))));
+    if (!userExists(initialCredentials.username())) {
+      createUser(new User(initialCredentials.username(), initialCredentials.password(), List.of(new SimpleGrantedAuthority("ADMIN"))));
+    }
   }
 }
