@@ -29,35 +29,6 @@ public class PeerApiService {
   @Autowired
   WebScraperService webScraper;
 
-  String dataLayerApiURI = "/api";
-  String dataLayerApiUsername = "user";
-  String dataLayerApiPassword = "userpassword";
-  RestClient restClient;
-  public PeerApiService(@Autowired RestClient.Builder builder) {
-    restClient = builder.build();
-  }
-
-  void updateTribes(List<TribeDataDTO> tribes) {
-    restClient.put()
-      .uri(dataLayerApiURI + "/tribes")
-      .body(new TribeDataDTOList(tribes))
-      .header("Authorization", "Basic " + Base64
-        .getEncoder()
-        .encodeToString((dataLayerApiUsername + ":" + dataLayerApiPassword).getBytes()))
-      .body(Void.class);
-  }
-
-  void updatePeers(List<PeerDataDTO> peers) {
-    restClient.put()
-      .uri(dataLayerApiURI + "/peers")
-      .body(new PeerDataDTOList(peers))
-      .header("Authorization", "Basic " +
-        Base64
-          .getEncoder()
-          .encodeToString((dataLayerApiUsername + ":" + dataLayerApiPassword).getBytes()))
-      .body(Void.class);
-  }
-
   public List<TribeDataDTO> getTribes(String campusId) {
     logger.info("retrieving tribes from campus {}", campusId);
     List<TribeDataDTO> tribes = requestService
@@ -101,7 +72,9 @@ public class PeerApiService {
         .id();
     logger.info("ykt campus id = {}", yktId);
     List<TribeDataDTO> tribes = getTribes(yktId);
-    updateTribes(tribes);
+
+    internalRequestService.put(new TribeDataDTOList(tribes), "/tribes");
+
     var peerTribes = new HashMap<String, Integer>();
     for (var tribe : tribes) {
       peerTribes.putAll(getTribeParticipantLogins(tribe));
@@ -115,7 +88,7 @@ public class PeerApiService {
         peers.add(
           new PeerDataDTO(
             peerDTO.login(),
-            peerDTO.parallelName(),
+            peerDTO.className(),
             peerLoginAndTribe.getValue(),
             peerDTO.status(),
             0,
@@ -129,7 +102,7 @@ public class PeerApiService {
         logger.info("peer {} is inactive, skipping", peerLoginAndTribe.getKey());
       }
     }
-    updatePeers(peers);
+    internalRequestService.put(new PeerDataDTOList(peers), "/peers");
     logger.info("application initialized");
   }
 
@@ -149,7 +122,7 @@ public class PeerApiService {
 
     return new PeerDataDTO(
       peer.login(),
-      peerDTO.parallelName(),
+      peerDTO.className(),
       peer.tribeId(),
       peerDTO.status(),
       tribePoints,

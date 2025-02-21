@@ -3,12 +3,12 @@ services:
     container_name: database
     image: postgres:latest
     environment:
-     - POSTGRES_USERNAME=$DB_USERNAME
-     - POSTGRES_PASSWORD=$DB_PASSWORD
-     - POSTGRES_DATABASE=$DB_DATABASE_NAME
+     - POSTGRES_USER=${DB_USERNAME}
+     - POSTGRES_PASSWORD=${DB_PASSWORD}
+     - POSTGRES_DATABASE=${DB_DATABASE_NAME}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "--quiet", "--username=${DB_USERNAME}"]
-      interval: 30s
+      interval: 20s
       timeout: 5s
       retries: 3
     ports:
@@ -36,9 +36,9 @@ services:
     environment:
      - API_USERNAME=${API_USERNAME}
      - API_PASSWORD=${API_PASSWORD}
-     - API_ENDPOINT=${API_BASE_ENDPOINT}
+     - API_BASE_ENDPOINT=${API_BASE_ENDPOINT}
      - API_RATE_LIMIT=${API_RATE_LIMIT}
-     - TOKEN_ENDPOINT=${API_TOKEN_ENDPOINT}
+     - API_TOKEN_ENDPOINT=${API_TOKEN_ENDPOINT}
      - INTERNAL_API_ENDPOINT=${INTERNAL_API_ENDPOINT}
      - INTERNAL_API_USERNAME=${INTERNAL_API_USERNAME}
      - INTERNAL_API_PASSWORD=${INTERNAL_API_PASSWORD}
@@ -48,6 +48,8 @@ services:
       context: ../backend/webscraper
       dockerfile: ../../docker/webscraper.Dockerfile
     restart: always
+    ports:
+     - "8081:8080"
   frontend:
     container_name: frontend
     depends_on:

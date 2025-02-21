@@ -7,12 +7,15 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
+import org.openqa.selenium.firefox.GeckoDriverService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.cyphercola.peers21.webscraper.exception.ExternalServerErrorException;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Scanner;
 
