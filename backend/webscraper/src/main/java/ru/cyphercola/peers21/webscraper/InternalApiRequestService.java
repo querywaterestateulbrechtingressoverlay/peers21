@@ -19,10 +19,11 @@ public class InternalApiRequestService {
   Logger logger = LoggerFactory.getLogger(InternalApiRequestService.class);
   private final String authorization;
   private final String apiBaseUrl;
-  private RestClient apiClient;
+  private final RestClient apiClient;
 
   @Autowired
   InternalApiRequestService(@Autowired RestClient.Builder rcb, InternalApiRequestServiceProperties properties) {
+    logger.info("username = {}, password = {}", properties.apiUsername(), properties.apiPassword());
     this.authorization = "Basic " + Base64.getEncoder().encodeToString((properties.apiUsername() + ":" + properties.apiPassword()).getBytes());
     this.apiBaseUrl = properties.apiBaseUrl();
     apiClient = rcb

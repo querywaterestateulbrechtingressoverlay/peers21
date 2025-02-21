@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS peer_data(
 CREATE TABLE IF NOT EXISTS api_users(
     id SERIAL PRIMARY KEY,
     login VARCHAR(255) UNIQUE,
-    password VARCHAR(255),
-    role VARCHAR(255)
+    password VARCHAR(255)
 );
+CREATE TABLE IF NOT EXISTS api_user_authorities(
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    authority VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES api_users (id)
+)

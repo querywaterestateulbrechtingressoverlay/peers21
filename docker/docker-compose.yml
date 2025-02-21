@@ -1,10 +1,13 @@
 services:
   database:
     container_name: database
-    env_file: database.env
     image: postgres:latest
+    environment:
+     - POSTGRES_USERNAME=$DB_USERNAME
+     - POSTGRES_PASSWORD=$DB_PASSWORD
+     - POSTGRES_DATABASE=$DB_DATABASE_NAME
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "--quiet"]
+      test: ["CMD-SHELL", "pg_isready", "--quiet", "--username=${DB_USERNAME}"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -12,10 +15,16 @@ services:
      - "5432:5432"
   data-layer:
     container_name: data-layer
+    environment:
+     - DB_USERNAME=${DB_USERNAME}
+     - DB_PASSWORD=${DB_PASSWORD}
+     - DB_DATABASE_NAME=${DB_DATABASE_NAME}
+     - DB_CONTAINER=database
+     - INIT_API_USER_NAME=${INTERNAL_API_USERNAME}
+     - INIT_API_USER_PASSWORD=${INTERNAL_API_PASSWORD}
     depends_on:
       database:
         condition: service_healthy
-    env_file: data-layer.env
     build:
       context: ../backend/data-layer
       dockerfile: ../../docker/data-layer.Dockerfile
@@ -24,9 +33,17 @@ services:
      - "8080:8080"
   webscraper:
     container_name: webscraper
+    environment:
+     - API_USERNAME=${API_USERNAME}
+     - API_PASSWORD=${API_PASSWORD}
+     - API_ENDPOINT=${API_BASE_ENDPOINT}
+     - API_RATE_LIMIT=${API_RATE_LIMIT}
+     - TOKEN_ENDPOINT=${API_TOKEN_ENDPOINT}
+     - INTERNAL_API_ENDPOINT=${INTERNAL_API_ENDPOINT}
+     - INTERNAL_API_USERNAME=${INTERNAL_API_USERNAME}
+     - INTERNAL_API_PASSWORD=${INTERNAL_API_PASSWORD}
     depends_on:
      - "data-layer"
-    env_file: webscraper.env
     build:
       context: ../backend/webscraper
       dockerfile: ../../docker/webscraper.Dockerfile
@@ -36,8 +53,8 @@ services:
     depends_on:
      - "data-layer"
     build:
-      context: ../
-      dockerfile: ./docker/frontend.Dockerfile
+      context: ../frontend
+      dockerfile: ../docker/frontend.Dockerfile
     ports:
      - "80:80"
 

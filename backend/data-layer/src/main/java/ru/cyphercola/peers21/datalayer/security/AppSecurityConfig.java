@@ -1,18 +1,21 @@
 package ru.cyphercola.peers21.datalayer.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configurers.provisioning.UserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -27,9 +30,9 @@ public class AppSecurityConfig {
       .authorizeHttpRequests((auth) -> auth
         .requestMatchers(HttpMethod.GET, "/ error").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/error").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER", "ADMIN")
-        .requestMatchers(HttpMethod.PUT,"/api/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.DELETE,"/api/**").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyAuthority("USER", "ADMIN")
+        .requestMatchers(HttpMethod.PUT,"/api/**").hasAuthority("ADMIN")
+        .requestMatchers(HttpMethod.DELETE,"/api/**").hasAuthority("ADMIN")
         .anyRequest().permitAll())
       .httpBasic(Customizer.withDefaults());
       // CSRF - NEEDS A PROPER FIX
@@ -37,9 +40,5 @@ public class AppSecurityConfig {
       h.csrf(AbstractHttpConfigurer::disable);
     // }
     return h.build();
-  }
-  @Bean
-  public UserDetailsService userDetailsService() {
-    return new CustomUserDetailsService();
   }
 }
