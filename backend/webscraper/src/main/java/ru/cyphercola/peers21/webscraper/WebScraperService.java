@@ -18,6 +18,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 @Service
 public class WebScraperService {
@@ -31,8 +32,13 @@ public class WebScraperService {
 
   @Autowired
   public WebScraperService(ExternalApiRequestServiceProperties properties) {
+    this.websiteUrl = properties.websiteUrl();
+    this.authPageUrl = properties.websiteAuthUrl();
+    this.apiUsername = properties.apiUsername();
+    this.apiPassword = properties.apiPassword();
+
     driver = new FirefoxDriver(new FirefoxOptions().addArguments("--headless"));
-    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
   }
 
   private void authorize() {
@@ -54,7 +60,13 @@ public class WebScraperService {
     if (driver.getCurrentUrl().equals(websiteUrl + "/profile/" + login)) {
       try {
         WebElement coalitionPower = driver.findElement(By.cssSelector("p[data-testid='coalition.power']"));
-        return new Scanner(coalitionPower.getText()).nextInt();
+        String text = coalitionPower.getText();
+        logger.info("element text = {}", text);
+        if (text != null) {
+          var p = Pattern.compile("\\d+").matcher(text);
+          p.find();
+          return Integer.parseInt(p.group());
+        }
       } catch (NoSuchElementException e) {
         throw new ExternalServerErrorException("couldn't find an element with the specified id");
       }

@@ -1,7 +1,6 @@
 package ru.cyphercola.peers21.webscraper;
 
 import org.springframework.retry.support.RetryTemplate;
-import org.springframework.web.client.RestClient;
 import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTO;
 import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTOList;
 import ru.cyphercola.peers21.webscraper.datalayerdto.TribeDataDTO;
@@ -45,16 +44,16 @@ public class PeerApiService {
     logger.info("retrieving peer logins from tribe {}", tribe.name());
     List<String> participantLoginList = new ArrayList<>();
     int page = 0;
-    while (true) {
+//    while (true) {
     logger.info("page {}", page);
       ParticipantLoginsDTO participantLogins = requestService
           .get(ParticipantLoginsDTO.class, "/coalitions/" + tribe.id() + "/participants?limit=50&offset=" + 50 * page++);
-      if (participantLogins.participants().isEmpty()) {
-        break;
-      } else {
+//      if (participantLogins.participants().isEmpty()) {
+//        break;
+//      } else {
         participantLoginList.addAll(participantLogins.participants());
-      }
-    }
+//      }
+//    }
     var peers = new HashMap<String, Integer>();
     for (String login : participantLoginList) {
       peers.put(login, tribe.id());

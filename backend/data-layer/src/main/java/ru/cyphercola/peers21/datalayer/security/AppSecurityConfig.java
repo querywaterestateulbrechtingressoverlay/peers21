@@ -28,7 +28,7 @@ public class AppSecurityConfig {
     HttpSecurity h = http
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests((auth) -> auth
-        .requestMatchers(HttpMethod.GET, "/ error").permitAll()
+        .requestMatchers(HttpMethod.GET, "/error").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/error").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyAuthority("USER", "ADMIN")
         .requestMatchers(HttpMethod.PUT,"/api/**").hasAuthority("ADMIN")
