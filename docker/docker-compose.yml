@@ -7,8 +7,8 @@ services:
      - POSTGRES_PASSWORD=${DB_PASSWORD}
      - POSTGRES_DATABASE=${DB_DATABASE_NAME}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "--quiet", "--username=${DB_USERNAME}"]
-      interval: 20s
+      test: pg_isready --quiet --username=$$POSTGRES_USER
+      interval: 10s
       timeout: 5s
       retries: 3
     ports:
@@ -25,6 +25,11 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/api/ping || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
     build:
       context: ../backend/data-layer
       dockerfile: ../../docker/data-layer.Dockerfile
@@ -45,7 +50,8 @@ services:
      - EXT_WEBSITE_URL=${EXT_WEBSITE_URL}
      - EXT_WEBSITE_AUTH_URL=${EXT_WEBSITE_AUTH_URL}
     depends_on:
-     - "data-layer"
+      data-layer:
+        condition: service_healthy
     build:
       context: ../backend/webscraper
       dockerfile: ../../docker/webscraper.Dockerfile
@@ -55,7 +61,8 @@ services:
   frontend:
     container_name: frontend
     depends_on:
-     - "data-layer"
+      data-layer:
+        condition: service_healthy
     build:
       context: ../frontend
       dockerfile: ../docker/frontend.Dockerfile

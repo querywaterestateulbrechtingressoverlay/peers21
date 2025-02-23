@@ -21,24 +21,18 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class AppSecurityConfig {
-  @Autowired
-  Environment environment;
   @Bean
   SecurityFilterChain securityConfig(HttpSecurity http) throws Exception {
-    HttpSecurity h = http
+    return http
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests((auth) -> auth
-        .requestMatchers(HttpMethod.GET, "/error").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/error").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyAuthority("USER", "ADMIN")
         .requestMatchers(HttpMethod.PUT,"/api/**").hasAuthority("ADMIN")
         .requestMatchers(HttpMethod.DELETE,"/api/**").hasAuthority("ADMIN")
         .anyRequest().permitAll())
-      .httpBasic(Customizer.withDefaults());
-      // CSRF - NEEDS A PROPER FIX
-    // if (List.of(environment.getActiveProfiles()).contains("test")) {
-      h.csrf(AbstractHttpConfigurer::disable);
-    // }
-    return h.build();
+      .httpBasic(Customizer.withDefaults())
+      .csrf(AbstractHttpConfigurer::disable)
+      .build();
   }
 }

@@ -18,7 +18,4 @@ ENV INTERNAL_API_USER=${INTERNAL_API_USERNAME}
 ENV INTERNAL_API_PASSWORD=${INTERNAL_API_PASSWORD}
 
 COPY ${JAR_FILE} app.jar
-RUN echo https://repo.jing.rocks/alpine/v3.21/community >> /etc/apk/repositories \
-    echo https://repo.jing.rocks/alpine/v3.21/main >> /etc/apk/repositories \
-    && apk add firefox
 ENTRYPOINT ["java", "-jar", "app.jar"]

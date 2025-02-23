@@ -1,6 +1,5 @@
 package ru.cyphercola.peers21.webscraper;
 
-import org.springframework.retry.support.RetryTemplate;
 import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTO;
 import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTOList;
 import ru.cyphercola.peers21.webscraper.datalayerdto.TribeDataDTO;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ru.cyphercola.peers21.webscraper.exception.ExternalServerErrorException;
 
 import java.util.*;
 
@@ -25,8 +23,8 @@ public class PeerApiService {
   ExternalApiRequestService requestService;
   @Autowired
   InternalApiRequestService internalRequestService;
-  @Autowired
-  WebScraperService webScraper;
+//  @Autowired
+//  WebScraperService webScraper;
 
   public List<TribeDataDTO> getTribes(String campusId) {
     logger.info("retrieving tribes from campus {}", campusId);
@@ -110,14 +108,7 @@ public class PeerApiService {
     ParticipantDTO peerDTO = requestService.get(ParticipantDTO.class, String.format("/participants/%s", peer.login()));
     ParticipantPointsDTO peerPointsDTO = requestService.get(ParticipantPointsDTO.class, String.format("/participants/%s/points", peer.login()));
 
-    int tribePoints;
-
-    RetryTemplate template = RetryTemplate.builder()
-      .maxAttempts(3)
-      .retryOn(ExternalServerErrorException.class)
-      .build();
-
-    tribePoints = template.execute(r -> webScraper.parseTribePoints(peer.login()));
+    int tribePoints = 0;
 
     return new PeerDataDTO(
       peer.login(),
