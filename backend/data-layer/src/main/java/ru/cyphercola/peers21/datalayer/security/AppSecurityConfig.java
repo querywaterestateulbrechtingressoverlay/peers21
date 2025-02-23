@@ -26,6 +26,7 @@ public class AppSecurityConfig {
     return http
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests((auth) -> auth
+        .requestMatchers(HttpMethod.GET, "/mockapi/**").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyAuthority("USER", "ADMIN")
         .requestMatchers(HttpMethod.PUT,"/api/**").hasAuthority("ADMIN")
