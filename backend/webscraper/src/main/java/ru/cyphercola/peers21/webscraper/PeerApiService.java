@@ -1,9 +1,6 @@
 package ru.cyphercola.peers21.webscraper;
 
-import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTO;
-import ru.cyphercola.peers21.webscraper.datalayerdto.PeerDataDTOList;
-import ru.cyphercola.peers21.webscraper.datalayerdto.TribeDataDTO;
-import ru.cyphercola.peers21.webscraper.datalayerdto.TribeDataDTOList;
+import ru.cyphercola.peers21.webscraper.datalayerdto.*;
 import ru.cyphercola.peers21.webscraper.dto.*;
 
 import org.slf4j.Logger;
@@ -42,16 +39,16 @@ public class PeerApiService {
     logger.info("retrieving peer logins from tribe {}", tribe.name());
     List<String> participantLoginList = new ArrayList<>();
     int page = 0;
-//    while (true) {
+    while (true) {
     logger.info("page {}", page);
       ParticipantLoginsDTO participantLogins = requestService
           .get(ParticipantLoginsDTO.class, "/coalitions/" + tribe.id() + "/participants?limit=50&offset=" + 50 * page++);
-//      if (participantLogins.participants().isEmpty()) {
-//        break;
-//      } else {
+      if (participantLogins.participants().isEmpty()) {
+        break;
+      } else {
         participantLoginList.addAll(participantLogins.participants());
-//      }
-//    }
+      }
+    }
     var peers = new HashMap<String, Integer>();
     for (String login : participantLoginList) {
       peers.put(login, tribe.id());
@@ -126,12 +123,14 @@ public class PeerApiService {
   @Scheduled(fixedRateString = "PT15M")
   public void updatePeerList() {
     logger.info("updating peer info...");
-    var peerList = internalRequestService.get(PeerDataDTOList.class,"/peers");
-    peerList.peers().forEach(System.out::println);
+    int page = 0;
+    var peerList = internalRequestService.get(PeerDataPaginatedDTO.class,"/peers");
     var changedPeerData = new ArrayList<PeerDataDTO>();
-    for (PeerDataDTO peer : peerList.peers()) {
-      changedPeerData.add(updatePeer(peer));
-    }
+    do {
+      for (PeerDataDTO peer : peerList.peerData()) {
+        changedPeerData.add(updatePeer(peer));
+      }
+    } while (peerList.nextPageUrl() != null);
     internalRequestService.put(new PeerDataDTOList(changedPeerData), "/peers");
     logger.info("update finished, updated {} peers", changedPeerData.size());
   }

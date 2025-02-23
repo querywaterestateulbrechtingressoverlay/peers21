@@ -1,6 +1,8 @@
 var currentPage = 0;
 var totalPages = 0;
 
+const mockApiUrl = "/mockapi"
+
 const apiUrl = "/api";
 
 var apiUsername = "";
@@ -9,7 +11,7 @@ var successfulLogin = false;
 var tribeData = [];
 var waveData = [];
 
-const headers = new Headers();
+var headers = new Headers();
 
 const sort = {
   column: "login",
@@ -27,14 +29,22 @@ document.querySelector("#login-form").addEventListener("submit", async (event) =
   const pong = await response.text();
   console.log(pong);
   if (pong == "pong") {
+    headers = new Headers(
+      {
+        Authorization: "Basic " + btoa(username + ":password")
+      }
+    );
     apiUsername = username;
     successfulLogin = true;
     const loginElement = document.getElementById("login-div");
     loginElement.innerHTML = "";
-
     const userInfo = document.createElement("p");
     userInfo.innerHTML = "Username: " + username;
     loginElement.appendChild(userInfo);    
+    await populateFilters();
+    await getPeerData(currentPage, "login", true);
+  } else {
+    headers = new Headers();
   }
 })
 
@@ -97,9 +107,6 @@ function drawOrderIndicator() {
 }
 
 window.onload = async () => {
-  headers.set(
-    "Authorization", "Basic " + btoa(apiUsername + ":password")
-  );
   await populateFilters();
   await getPeerData(currentPage, "login", true);
   // currentPage = pagination.currentPage;
@@ -109,15 +116,16 @@ window.onload = async () => {
 
 async function populateFilters() {
   try {
-    const tribeResponse = await fetch(apiUrl + "/tribes", {
+    const tribeResponse = await fetch((successfulLogin ? apiUrl : mockApiUrl) + "/tribes", {
       headers: headers
     });
-    tribeData = await tribeResponse.json();
-    const waveResponse = await fetch(apiUrl + "/waves", {
+    tribeData = (await tribeResponse.json()).tribes;
+    const waveResponse = await fetch((successfulLogin ? apiUrl : mockApiUrl) + "/waves", {
       headers: headers
     });
     waveData = await waveResponse.json();
     const tribeFilter = document.getElementById("tribe-filter");
+    tribeFilter.innerHTML = "<option>All</option>";
     tribeData.forEach(t => {
       const tribe = document.createElement("option");
       tribe.setAttribute("id", "filter-" + t.name.toLowerCase());
@@ -125,6 +133,7 @@ async function populateFilters() {
       tribeFilter.appendChild(tribe);
     })
     const waveFilter = document.getElementById("wave-filter");
+    waveFilter.innerHTML = "<option>All</option>";
     waveData.forEach(w => {
       const wave = document.createElement("option");
       wave.setAttribute("id", "filter-" + w.toLowerCase());
@@ -152,18 +161,18 @@ async function getPeerData(page, orderBy, ascending, tribe, wave) {
   params.append("orderBy", orderBy);
   params.append("orderAscending", ascending);
   if (tribe != null && tribe != "All") {
-    params.append("tribeId", tribeData.find((t) => t.name == tribe).tribeId);
+    params.append("tribeId", tribeData.find((t) => t.name == tribe).id);
   }
   if (wave != null && wave != "All") {
     params.append("wave", wave);
   }
   try {
-    const peerResponse = await fetch(apiUrl + "/peers?" + params, {
+    const peerResponse = await fetch((successfulLogin ? apiUrl : mockApiUrl) + "/peers?" + params, {
       headers: headers
     });
     const json = await peerResponse.json();
     const tableBody = document.querySelector("#peer-table tbody");
-    if (json.size == 0) {
+    if (json.peerData.size == 0) {
       tableBody.innerHTML = "no peers found";  
     } else {
       tableBody.innerHTML = "";
@@ -172,7 +181,7 @@ async function getPeerData(page, orderBy, ascending, tribe, wave) {
         row.innerHTML = `
           <td>${peer.login}</tr>
           <td>${peer.wave}</tr>
-          <td>${tribeData.find((t) => t.tribeId == peer.tribeId).name}</tr>
+          <td>${tribeData.find((t) => t.id == peer.tribeId).name}</tr>
           <td>${peer.expValue}</tr>
           <td>${peer.peerReviewPoints}</tr>
           <td>${peer.codeReviewPoints}</tr>

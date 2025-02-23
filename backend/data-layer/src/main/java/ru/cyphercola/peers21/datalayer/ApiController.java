@@ -13,12 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-import ru.cyphercola.peers21.datalayer.dto.PeerDataDTO;
-import ru.cyphercola.peers21.datalayer.dto.PeerDataDTOList;
-import ru.cyphercola.peers21.datalayer.dto.TribeDataDTO;
-import ru.cyphercola.peers21.datalayer.dto.TribeDataDTOList;
-
-import static org.springframework.http.HttpHeaders.LINK;
+import ru.cyphercola.peers21.datalayer.data.mock.MockPeerDataRepository;
+import ru.cyphercola.peers21.datalayer.data.mock.MockTribeDataRepository;
+import ru.cyphercola.peers21.datalayer.dto.*;
 
 @RestController
 @CrossOrigin
@@ -28,6 +25,10 @@ public class ApiController {
   TribeDataRepository tribeRepo;
   @Autowired
   PeerDataRepository peerRepo;
+  @Autowired
+  MockTribeDataRepository mockTribeRepo;
+  @Autowired
+  MockPeerDataRepository mockPeerRepo;
 
   @GetMapping("/ping")
   String ping() {
@@ -65,12 +66,12 @@ public class ApiController {
   }
 
   @GetMapping("/peers")
-  ResponseEntity<PeerDataDTOList> getPeers(@RequestParam(defaultValue = "login") String orderBy,
-                                           @RequestParam(defaultValue = "true") boolean orderAscending,
-                                           @RequestParam(defaultValue = "30") int peersPerPage,
-                                           @RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(required = false) Integer tribeId,
-                                           @RequestParam(required = false) String wave) {
+  ResponseEntity<PeerDataPaginatedDTO> getPeers(@RequestParam(defaultValue = "login") String orderBy,
+                                                @RequestParam(defaultValue = "true") boolean orderAscending,
+                                                @RequestParam(defaultValue = "30") int peersPerPage,
+                                                @RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(required = false) Integer tribeId,
+                                                @RequestParam(required = false) String wave) {
     Sort sort = Sort.by(((orderAscending) ? Sort.Direction.ASC : Sort.Direction.DESC), orderBy);
     Page<PeerData> peerData = switch (tribeId) {
       case null -> switch (wave) {
@@ -97,7 +98,15 @@ public class ApiController {
       headers.add(HttpHeaders.LINK, "<" + String.format(formatString, page + 1) + ">; rel=next");
       headers.add(HttpHeaders.LINK, "<" + String.format(formatString, peerData.getTotalPages() - 1) + ">; rel=last");
     }
-    return new ResponseEntity<>(new PeerDataDTOList(peerData.getContent().stream().map(PeerData::toDTO).toList()), headers, HttpStatus.OK);
+    return new ResponseEntity<>(new PeerDataPaginatedDTO(
+      peerData.getContent().stream().map(PeerData::toDTO).toList(),
+      page,
+      peerData.getTotalPages(),
+      peerData.hasPrevious() ? String.format(formatString, 0) : null,
+      peerData.hasPrevious() ? String.format(formatString, page - 1) : null,
+      peerData.hasNext() ? String.format(formatString, page + 1) : null,
+      peerData.hasNext() ? String.format(formatString, peerData.getTotalPages() - 1) : null
+      ), headers, HttpStatus.OK);
   }
   @DeleteMapping("/peers")
   void deletePeer(@RequestParam String peerLogin) {

@@ -52,7 +52,6 @@ public class InternalApiRequestService {
       .body(requestBody)
       .retrieve()
       .toBodilessEntity();
-    System.out.println(asd.getStatusCode());
     logger.info(asd.getStatusCode().toString());
   }
 }
