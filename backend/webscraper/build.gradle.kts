@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-	implementation("org.seleniumhq.selenium:selenium-java:4.28.1")
+//	implementation("org.seleniumhq.selenium:selenium-java:4.28.1")
 	implementation("com.bucket4j:bucket4j-core:8.10.1")
 	implementation("org.springframework.boot:spring-boot-starter-web:3.4.2")
 	implementation("org.springframework.retry:spring-retry:2.0.11")
