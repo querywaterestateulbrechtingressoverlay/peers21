@@ -29,22 +29,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Service
 @EnableConfigurationProperties(InitialApiUserCredentials.class)
 public class CustomUserDetailsService implements UserDetailsManager, InitializingBean {
-  Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
+  private final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
   @Autowired
-  PeerDataRepository peerDataRepository;
+  private PeerDataRepository peerDataRepository;
   @Autowired
-  ApiUserRepository apiUserRepository;
+  private ApiUserRepository apiUserRepository;
   @Autowired
-  ApiUserAuthorityRepository authorityRepository;
+  private ApiUserAuthorityRepository authorityRepository;
+  @Autowired
+  private InitialApiUserCredentials initialCredentials;
 
-  @Autowired
-  InitialApiUserCredentials initialCredentials;
-
-  PasswordEncoder encoder  = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+  private final PasswordEncoder encoder  = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    logger.info("loading user {}", username);
+    logger.debug("loading user {}", username);
     var apiUser = apiUserRepository.findFirst1ByLogin(username);
     if (apiUser.isPresent()) {
       List<ApiUserAuthority> authorities = authorityRepository.findByApiUserLogin(username);
@@ -56,7 +55,7 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
           .toList())
         .build();
     } else {
-      logger.info("user {} not found in the api user database", username);
+      logger.debug("user {} not found in the api user database", username);
       var peerData = peerDataRepository.findFirst1ByLogin(username);
       if (peerData.isPresent()) {
         return User.builder()
@@ -118,8 +117,8 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    logger.info("creating a initial user {} with password {}", initialCredentials.username(), initialCredentials.password());
     if (!userExists(initialCredentials.username())) {
+      logger.info("creating a initial user {} with password {}", initialCredentials.username(), initialCredentials.password());
       createUser(new User(initialCredentials.username(), initialCredentials.password(), List.of(new SimpleGrantedAuthority("ADMIN"))));
     }
   }

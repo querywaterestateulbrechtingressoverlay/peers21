@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
@@ -16,14 +17,13 @@ import java.util.Base64;
 @Service
 @EnableConfigurationProperties(InternalApiRequestServiceProperties.class)
 public class InternalApiRequestService {
-  Logger logger = LoggerFactory.getLogger(InternalApiRequestService.class);
+  private final Logger logger = LoggerFactory.getLogger(InternalApiRequestService.class);
   private final String authorization;
   private final String apiBaseUrl;
   private final RestClient apiClient;
 
   @Autowired
   InternalApiRequestService(@Autowired RestClient.Builder rcb, InternalApiRequestServiceProperties properties) {
-    logger.info("username = {}, password = {}", properties.apiUsername(), properties.apiPassword());
     this.authorization = "Basic " + Base64.getEncoder().encodeToString((properties.apiUsername() + ":" + properties.apiPassword()).getBytes());
     this.apiBaseUrl = properties.apiBaseUrl();
     apiClient = rcb
@@ -31,27 +31,38 @@ public class InternalApiRequestService {
       .build();
   }
   public <T> T get(Class<T> responseClass, String apiUrl) {
-    T result;
-    RetryTemplate template = RetryTemplate.builder()
-      .maxAttempts(10)
-      .retryOn(HttpClientErrorException.class)
-      .retryOn(IOException.class)
-      .retryOn(org.springframework.web.client.ResourceAccessException.class)
-      .build();
-    result = template.execute(r -> apiClient.get()
-      .uri(apiBaseUrl + apiUrl)
-      .accept(MediaType.APPLICATION_JSON)
-      .retrieve()
-      .body(responseClass));
-    return result;
+    try {
+      T result;
+      RetryTemplate template = RetryTemplate.builder()
+        .maxAttempts(10)
+        .retryOn(HttpClientErrorException.class)
+        .retryOn(IOException.class)
+        .retryOn(org.springframework.web.client.ResourceAccessException.class)
+        .build();
+      result = template.execute(r -> apiClient.get()
+        .uri(apiBaseUrl + apiUrl)
+        .accept(MediaType.APPLICATION_JSON)
+        .retrieve()
+        .body(responseClass));
+      logger.trace("GET request to internal API {}", apiUrl);
+      return result;
+    } catch (HttpStatusCodeException e) {
+      logger.warn("error while making a GET request to internal api {}, status code = {}, status text = {}", apiUrl, e.getStatusCode(), e.getStatusText());
+      throw e;
+    }
   }
   public <U> void put(U requestBody, String apiUrl) {
-    var asd = apiClient.put()
-      .uri(apiBaseUrl + apiUrl)
-      .header("Authorization", authorization)
-      .body(requestBody)
-      .retrieve()
-      .toBodilessEntity();
-    logger.info(asd.getStatusCode().toString());
+    try {
+      var asd = apiClient.put()
+        .uri(apiBaseUrl + apiUrl)
+        .header("Authorization", authorization)
+        .body(requestBody)
+        .retrieve()
+        .toBodilessEntity();
+      logger.trace("PUT request to internal API {}", apiUrl);
+    } catch (HttpStatusCodeException e) {
+      logger.warn("error while making a PUT request to internal api {}, status code = {}, status text = {}", apiUrl, e.getStatusCode(), e.getStatusText());
+      throw e;
+    }
   }
 }
