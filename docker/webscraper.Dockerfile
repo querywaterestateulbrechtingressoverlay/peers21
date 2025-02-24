@@ -1,4 +1,4 @@
-FROM amazoncorretto:23.0.2-alpine3.21
+FROM ghcr.io/graalvm/jdk-community:23
 ARG JAR_FILE=build/libs/*.jar
 
 ARG API_USERNAME=user
