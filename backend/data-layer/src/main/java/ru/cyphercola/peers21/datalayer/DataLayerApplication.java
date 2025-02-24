@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
-@ConfigurationPropertiesScan({"cypherco.peersapp.api-request-service"})
 public class DataLayerApplication {
 
 	public static void main(String[] args) {

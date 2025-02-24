@@ -1,1 +1,1 @@
-rootProject.name = "peers21-backend"
+rootProject.name = "peers21.datalayer"
