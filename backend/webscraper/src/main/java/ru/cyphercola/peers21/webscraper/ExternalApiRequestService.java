@@ -102,7 +102,7 @@ public class ExternalApiRequestService {
           .retrieve()
           .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
             logger.trace("error {}, retrying", resp.getStatusCode());
-            throw new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS);
+            throw new HttpClientErrorException(resp.getStatusCode());
           })
           .body(responseClass));
         break;

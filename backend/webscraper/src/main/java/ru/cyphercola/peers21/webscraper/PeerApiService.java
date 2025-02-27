@@ -56,19 +56,19 @@ public class PeerApiService {
   }
 
   public void initPeerList() {
-    String yktId = extApiRequestService.get(CampusesDTO.class, "/campuses").campuses()
-        .stream()
+    String yktId = extApiRequestService.get(CampusesDTO.class, "/campuses").campuses().stream()
         .filter(campus -> campus.shortName().equals("21 Yakutsk"))
         .findFirst()
         .orElseThrow(() -> new RuntimeException("couldn't find a campus with specified ID"))
         .id();
     logger.trace("ykt campus id = {}", yktId);
     List<TribeDataDTO> tribes = getTribes(yktId);
-
+    logger.info("transferring tribe list to data layer...");
     intApiRequestService.put(new TribeDataDTOList(tribes), "/tribes");
 
     var peerTribes = new HashMap<String, Integer>();
     for (var tribe : tribes) {
+
       peerTribes.putAll(getTribeParticipantLogins(tribe));
     }
     var peers = new ArrayList<PeerDataDTO>();
