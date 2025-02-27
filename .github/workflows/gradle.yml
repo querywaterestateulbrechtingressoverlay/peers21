@@ -32,6 +32,15 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
+    - name: Test data layer
+      working-directory: ./backend/data-layer
+      run: ./gradlew test
+
+      
+    - name: Test web scraper
+      working-directory: ./backend/webscraper
+      run: ./gradlew test
+
     - name: Build with Gradle Wrapper
       env:
         API_USERNAME: ${{ secrets.API_USERNAME }}
