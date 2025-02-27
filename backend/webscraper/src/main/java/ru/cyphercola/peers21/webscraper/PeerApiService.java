@@ -73,7 +73,7 @@ public class PeerApiService {
     }
     var peers = new ArrayList<PeerDataDTO>();
     for (Map.Entry<String, Integer> peerLoginAndTribe : peerTribes.entrySet()) {
-      ParticipantDTO peerDTO = extApiRequestService.get(ParticipantDTO.class, String.format("participants/%s", peerLoginAndTribe.getKey()));
+      ParticipantDTO peerDTO = extApiRequestService.get(ParticipantDTO.class, String.format("/participants/%s", peerLoginAndTribe.getKey()));
       if (Objects.equals(peerDTO.status(), "ACTIVE") || Objects.equals(peerDTO.status(), "FROZEN")) {
         logger.trace("saving peer {}...", peerLoginAndTribe.getKey());
         ParticipantPointsDTO peerPointsDTO = extApiRequestService.get(ParticipantPointsDTO.class, String.format("/participants/%s/points", peerLoginAndTribe.getKey()));
