@@ -42,25 +42,40 @@ public class AppSecurityConfig {
   @Value("${cypherco.peersapp.datalayer.jwt.publickey}")
   private RSAPublicKey publicKey;
   @Bean
-  SecurityFilterChain securityConfig(HttpSecurity http) throws Exception {
+  SecurityFilterChain securityConfigFrontend(HttpSecurity http) throws Exception {
     return http
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests((auth) -> auth
         .requestMatchers(HttpMethod.GET, "/mockapi/**").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/token").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyAuthority("USER", "ADMIN")
-        .requestMatchers(HttpMethod.PUT,"/api/**").hasAuthority("ADMIN")
-        .requestMatchers(HttpMethod.DELETE,"/api/**").hasAuthority("ADMIN")
+        .requestMatchers("/api/**").hasAnyAuthority("SCOPE_ADMIN")
         .anyRequest().permitAll())
-      .httpBasic(Customizer.withDefaults())
+      .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
+      .exceptionHandling((exceptions) -> exceptions
+        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+      )
+      .build();
+  }
+  @Bean
+  SecurityFilterChain securityConfigBackend(HttpSecurity http) throws Exception {
+    return http
+      .csrf(AbstractHttpConfigurer::disable)
+      .authorizeHttpRequests((auth) -> auth.requestMatchers("/api/backend/**").hasAuthority("SCOPE_API"))
       .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
       .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .exceptionHandling((exceptions) -> exceptions
         .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
         .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
       )
+      .build();
+  }
+
+  @Bean
+  SecurityFilterChain securityConfigAuth(HttpSecurity http) throws Exception {
+    return http
+      .cors(Customizer.withDefaults())
       .csrf(AbstractHttpConfigurer::disable)
+      .authorizeHttpRequests((auth) -> auth.requestMatchers(HttpMethod.POST, "/api/login").permitAll())
       .build();
   }
   @Bean
