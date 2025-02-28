@@ -20,7 +20,7 @@ import ru.cyphercola.peers21.datalayer.dto.*;
 @RestController
 @CrossOrigin
 @RequestMapping("api")
-public class ApiController {
+public class FrontendController {
   @Autowired
   TribeDataRepository tribeRepo;
   @Autowired
@@ -35,11 +35,11 @@ public class ApiController {
     return "pong";
   }
 
-  @GetMapping("/tribes")
+  @GetMapping("/frontend/tribes")
   TribeDataDTOList getTribes() {
     return new TribeDataDTOList(StreamSupport.stream(tribeRepo.findAll().spliterator(), false).map(TribeData::toDTO).toList());
   }
-  @DeleteMapping("/tribes")
+  @DeleteMapping("/frontend/tribes")
   void deleteTribe(@RequestParam Integer tribeId) {
     tribeRepo.deleteById(
       tribeRepo
@@ -47,7 +47,7 @@ public class ApiController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tribe with id " + tribeId + " was not found"))
         .id());
   }
-  @PutMapping("/tribes")
+  @PutMapping("/frontend/tribes")
   void insertOrUpdateTribes(@RequestBody TribeDataDTOList tribeDataDTOs) {
     if (tribeDataDTOs.tribes() != null) {
       for (var tribeDataDTO : tribeDataDTOs.tribes()) {
@@ -60,12 +60,12 @@ public class ApiController {
     }
   }
 
-  @GetMapping("/waves")
+  @GetMapping("/frontend/waves")
   List<String> getWaves() {
     return peerRepo.findDistinctWaves();
   }
 
-  @GetMapping("/peers")
+  @GetMapping("/frontend/peers")
   ResponseEntity<PeerDataPaginatedDTO> getPeers(@RequestParam(defaultValue = "login") String orderBy,
                                                 @RequestParam(defaultValue = "true") boolean orderAscending,
                                                 @RequestParam(defaultValue = "30") int peersPerPage,
@@ -108,7 +108,7 @@ public class ApiController {
       peerData.hasNext() ? String.format(formatString, peerData.getTotalPages() - 1) : null
       ), headers, HttpStatus.OK);
   }
-  @DeleteMapping("/peers")
+  @DeleteMapping("/frontend/peers")
   void deletePeer(@RequestParam String peerLogin) {
     peerRepo.deleteById(
       peerRepo
@@ -116,7 +116,7 @@ public class ApiController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Peer with login " + peerLogin + " was not found"))
         .id());
   }
-  @PutMapping("/peers")
+  @PutMapping("/frontend/peers")
   void putPeers(@RequestBody PeerDataDTOList peerDataDTOs) {
     if (peerDataDTOs.peers() != null) {
       for (var peerDataDTO: peerDataDTOs.peers()) {

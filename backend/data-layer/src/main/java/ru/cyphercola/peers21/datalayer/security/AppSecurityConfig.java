@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
@@ -34,6 +35,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 
+import static org.springframework.security.oauth2.core.authorization.OAuth2AuthorizationManagers.hasScope;
+
 @Configuration
 @EnableWebSecurity
 public class AppSecurityConfig {
@@ -41,41 +44,53 @@ public class AppSecurityConfig {
   private RSAPrivateKey privateKey;
   @Value("${cypherco.peersapp.datalayer.jwt.publickey}")
   private RSAPublicKey publicKey;
+
+
   @Bean
+  @Order(1)
+  SecurityFilterChain securityConfigAuth(HttpSecurity http) throws Exception {
+    return http
+        .securityMatcher("/api/auth/**")
+        .cors(Customizer.withDefaults())
+        .csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(
+            (auth) -> auth
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll())
+        .httpBasic(Customizer.withDefaults())
+        .build();
+  }
+  @Bean
+  @Order(2)
+  SecurityFilterChain securityConfigBackend(HttpSecurity http) throws Exception {
+    return http
+        .securityMatcher("/api/backend/**")
+        .csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests((auth) -> auth.requestMatchers("/api/backend/**").access(hasScope("api")))
+        .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
+        .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .exceptionHandling((exceptions) -> exceptions
+            .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+            .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+        )
+        .build();
+  }
+  @Bean
+  @Order(3)
   SecurityFilterChain securityConfigFrontend(HttpSecurity http) throws Exception {
     return http
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests((auth) -> auth
         .requestMatchers(HttpMethod.GET, "/mockapi/**").permitAll()
-        .requestMatchers("/api/**").hasAnyAuthority("SCOPE_ADMIN")
+        .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
+        .requestMatchers(HttpMethod.GET,"/api/**").access(hasScope("user"))
+        .requestMatchers(HttpMethod.PUT,"/api/**").access(hasScope("admin"))
+        .requestMatchers(HttpMethod.DELETE, "/api/**").access(hasScope("admin"))
         .anyRequest().permitAll())
       .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
       .exceptionHandling((exceptions) -> exceptions
         .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
         .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
       )
-      .build();
-  }
-  @Bean
-  SecurityFilterChain securityConfigBackend(HttpSecurity http) throws Exception {
-    return http
-      .csrf(AbstractHttpConfigurer::disable)
-      .authorizeHttpRequests((auth) -> auth.requestMatchers("/api/backend/**").hasAuthority("SCOPE_API"))
-      .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
-      .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .exceptionHandling((exceptions) -> exceptions
-        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-      )
-      .build();
-  }
-
-  @Bean
-  SecurityFilterChain securityConfigAuth(HttpSecurity http) throws Exception {
-    return http
-      .cors(Customizer.withDefaults())
-      .csrf(AbstractHttpConfigurer::disable)
-      .authorizeHttpRequests((auth) -> auth.requestMatchers(HttpMethod.POST, "/api/login").permitAll())
       .build();
   }
   @Bean

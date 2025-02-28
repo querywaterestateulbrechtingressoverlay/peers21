@@ -119,7 +119,7 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
   public void afterPropertiesSet() throws Exception {
     if (!userExists(initialCredentials.username())) {
       logger.info("creating a initial user {} with password {}", initialCredentials.username(), initialCredentials.password());
-      createUser(new User(initialCredentials.username(), initialCredentials.password(), List.of(new SimpleGrantedAuthority("SCOPE_API"))));
+      createUser(new User(initialCredentials.username(), initialCredentials.password(), List.of(new SimpleGrantedAuthority("api"), new SimpleGrantedAuthority("admin"), new SimpleGrantedAuthority("user"))));
     }
   }
 }
