@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.cyphercola.peers21.datalayer.dto.JWTokenDTO;
@@ -23,6 +24,7 @@ public class SecurityController {
   @Autowired
   JwtEncoder encoder;
 
+  @CrossOrigin
   @PostMapping("/api/auth/login")
   public JWTokenDTO login(Authentication authentication) {
     String scope = authentication.getAuthorities()

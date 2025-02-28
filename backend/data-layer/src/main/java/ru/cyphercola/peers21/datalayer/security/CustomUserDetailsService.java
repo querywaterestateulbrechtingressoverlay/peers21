@@ -61,7 +61,7 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
         return User.builder()
           .username(peerData.get().login())
           .password(encoder.encode("password"))
-          .authorities("USER")
+          .authorities("user")
           .build();
       } else {
         throw new UsernameNotFoundException("user " + username + " not found");

@@ -2,11 +2,10 @@ var currentPage = 0;
 var totalPages = 0;
 
 const mockApiUrl = "/mockapi"
+const apiUrl = "/api/frontend";
 
-const apiUrl = "/api";
-
-var apiUsername = "";
 var successfulLogin = false;
+var tokenExpiry;
 
 var tribeData = [];
 var waveData = [];
@@ -21,21 +20,21 @@ const sort = {
 document.querySelector("#login-form").addEventListener("submit", async (event) =>  {
   event.preventDefault();
   const username = new FormData(event.target).get("username");
-  const response = await fetch(apiUrl + "/ping", {
+  const response = await fetch("/api/auth/login", {
+    method: 'POST',
     headers: {
       Authorization: "Basic " + btoa(username + ":password")
     }
   });
-  const pong = await response.text();
-  console.log(pong);
-  if (pong == "pong") {
+  if (response.ok) {
+    const responseBody = await response.json();
     headers = new Headers(
       {
-        Authorization: "Basic " + btoa(username + ":password")
+        Authorization: "Bearer " + responseBody.token
       }
     );
-    apiUsername = username;
     successfulLogin = true;
+    tokenExpiry = Date.now() + responseBody.expiry * 1000;
     const loginElement = document.getElementById("login-div");
     loginElement.innerHTML = "";
     const userInfo = document.createElement("p");
@@ -170,47 +169,49 @@ async function getPeerData(page, orderBy, ascending, tribe, wave) {
     const peerResponse = await fetch((successfulLogin ? apiUrl : mockApiUrl) + "/peers?" + params, {
       headers: headers
     });
-    const json = await peerResponse.json();
-    const tableBody = document.querySelector("#peer-table tbody");
-    if (json.peerData.size == 0) {
-      tableBody.innerHTML = "no peers found";  
-    } else {
-      tableBody.innerHTML = "";
-      json.peerData.forEach(peer => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${peer.login}</tr>
-          <td>${peer.wave}</tr>
-          <td>${tribeData.find((t) => t.id == peer.tribeId).name}</tr>
-          <td>${peer.expValue}</tr>
-          <td>${peer.peerReviewPoints}</tr>
-          <td>${peer.codeReviewPoints}</tr>
-        `
-        tableBody.appendChild(row);
-      })
+    if (peerResponse.ok) {
+      const json = await peerResponse.json();
+      const tableBody = document.querySelector("#peer-table tbody");
+      if (json.peerData.size == 0) {
+        tableBody.innerHTML = "no peers found";  
+      } else {
+        tableBody.innerHTML = "";
+        json.peerData.forEach(peer => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${peer.login}</tr>
+            <td>${peer.wave}</tr>
+            <td>${tribeData.find((t) => t.id == peer.tribeId).name}</tr>
+            <td>${peer.expValue}</tr>
+            <td>${peer.peerReviewPoints}</tr>
+            <td>${peer.codeReviewPoints}</tr>
+          `
+          tableBody.appendChild(row);
+        })
+      }
+      // const pagination = {
+      //   currentPage: json.currentPage,
+      //   totalPages: json.totalPages
+      // }
+      // return pagination;
+      currentPage = json.currentPage;
+      totalPages = json.totalPages;
+      if (currentPage == 0) {
+        document.querySelectorAll(".first-page").forEach(e => e.disabled = true);
+        document.querySelectorAll(".previous-page").forEach(e => e.disabled = true);
+      } else {
+        document.querySelectorAll(".first-page").forEach(e => e.disabled = false);
+        document.querySelectorAll(".previous-page").forEach(e => e.disabled = false);
+      }
+      if (currentPage == totalPages - 1) {
+        document.querySelectorAll(".last-page").forEach(e => e.disabled = true);
+        document.querySelectorAll(".next-page").forEach(e => e.disabled = true);
+      } else {
+        document.querySelectorAll(".last-page").forEach(e => e.disabled = false);
+        document.querySelectorAll(".next-page").forEach(e => e.disabled = false);
+      }
+      document.querySelectorAll(".page-input-field").forEach(e => e.innerHTML = json.currentPage + 1);
     }
-    // const pagination = {
-    //   currentPage: json.currentPage,
-    //   totalPages: json.totalPages
-    // }
-    // return pagination;
-    currentPage = json.currentPage;
-    totalPages = json.totalPages;
-    if (currentPage == 0) {
-      document.querySelectorAll(".first-page").forEach(e => e.disabled = true);
-      document.querySelectorAll(".previous-page").forEach(e => e.disabled = true);
-    } else {
-      document.querySelectorAll(".first-page").forEach(e => e.disabled = false);
-      document.querySelectorAll(".previous-page").forEach(e => e.disabled = false);
-    }
-    if (currentPage == totalPages - 1) {
-      document.querySelectorAll(".last-page").forEach(e => e.disabled = true);
-      document.querySelectorAll(".next-page").forEach(e => e.disabled = true);
-    } else {
-      document.querySelectorAll(".last-page").forEach(e => e.disabled = false);
-      document.querySelectorAll(".next-page").forEach(e => e.disabled = false);
-    }
-    document.querySelectorAll(".page-input-field").forEach(e => e.innerHTML = json.currentPage + 1);
   } catch (error) {
     console.error(error.message);
   }
