@@ -10,32 +10,35 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.cyphercola.peers21.datalayer.dto.JWTokenDTO;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
 
 @RestController
 public class SecurityController {
-  Logger logger = LoggerFactory.getLogger(SecurityController.class);
+  private final Logger logger = LoggerFactory.getLogger(SecurityController.class);
+  private final long expirySeconds = 360000L;
+
   @Autowired
   JwtEncoder encoder;
 
   @PostMapping("/api/auth/login")
-  public String login(Authentication authentication) {
-    Instant now = Instant.now();
-    long expiry = 36000L;
+  public JWTokenDTO login(Authentication authentication) {
     String scope = authentication.getAuthorities()
       .stream()
       .map(GrantedAuthority::getAuthority)
       .collect(Collectors.joining(" "));
     logger.info(scope);
+    Instant now = Instant.now();
+    Instant expiryInstant = now.plusSeconds(expirySeconds);
     JwtClaimsSet claims = JwtClaimsSet.builder()
       .issuer("self")
       .issuedAt(now)
-      .expiresAt(now.plusSeconds(expiry))
+      .expiresAt(expiryInstant)
       .subject(authentication.getName())
       .claim("scope", scope)
       .build();
-    return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    return new JWTokenDTO(encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue(), expirySeconds);
   }
 }

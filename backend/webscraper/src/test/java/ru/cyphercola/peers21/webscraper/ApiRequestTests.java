@@ -15,8 +15,8 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
-import ru.cyphercola.peers21.webscraper.dto.ApiKeyResponse;
-import ru.cyphercola.peers21.webscraper.dto.CampusDTO;
+import ru.cyphercola.peers21.webscraper.dto.external.ApiKeyResponse;
+import ru.cyphercola.peers21.webscraper.dto.external.CampusDTO;
 
 import java.net.URI;
 import java.net.URISyntaxException;

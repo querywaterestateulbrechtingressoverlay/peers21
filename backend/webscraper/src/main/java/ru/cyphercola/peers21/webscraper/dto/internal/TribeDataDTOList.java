@@ -1,4 +1,4 @@
-package ru.cyphercola.peers21.webscraper.datalayerdto;
+package ru.cyphercola.peers21.webscraper.dto.internal;
 
 import java.util.List;
 

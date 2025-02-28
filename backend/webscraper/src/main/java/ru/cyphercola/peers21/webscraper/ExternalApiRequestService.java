@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.retry.support.RetryTemplate;
@@ -14,14 +13,13 @@ import io.github.bucket4j.Bucket;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import ru.cyphercola.peers21.webscraper.dto.ApiKeyResponse;
+import ru.cyphercola.peers21.webscraper.dto.external.ApiKeyResponse;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;
-import java.util.concurrent.*;
 
 @Service
 @EnableConfigurationProperties(ExternalApiRequestServiceProperties.class)

@@ -20,7 +20,7 @@ import ru.cyphercola.peers21.datalayer.dto.*;
 @RestController
 @CrossOrigin
 @RequestMapping("api")
-public class FrontendController {
+public class Controller {
   @Autowired
   TribeDataRepository tribeRepo;
   @Autowired
@@ -35,11 +35,11 @@ public class FrontendController {
     return "pong";
   }
 
-  @GetMapping("/frontend/tribes")
+  @GetMapping({"/frontend/tribes", "/backend/tribes"})
   TribeDataDTOList getTribes() {
     return new TribeDataDTOList(StreamSupport.stream(tribeRepo.findAll().spliterator(), false).map(TribeData::toDTO).toList());
   }
-  @DeleteMapping("/frontend/tribes")
+  @DeleteMapping({"/frontend/tribes", "/backend/tribes"})
   void deleteTribe(@RequestParam Integer tribeId) {
     tribeRepo.deleteById(
       tribeRepo
@@ -47,7 +47,7 @@ public class FrontendController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tribe with id " + tribeId + " was not found"))
         .id());
   }
-  @PutMapping("/frontend/tribes")
+  @PutMapping({"/frontend/tribes", "/backend/tribes"})
   void insertOrUpdateTribes(@RequestBody TribeDataDTOList tribeDataDTOs) {
     if (tribeDataDTOs.tribes() != null) {
       for (var tribeDataDTO : tribeDataDTOs.tribes()) {
@@ -60,12 +60,12 @@ public class FrontendController {
     }
   }
 
-  @GetMapping("/frontend/waves")
+  @GetMapping({"/frontend/waves", "/backend/waves"})
   List<String> getWaves() {
     return peerRepo.findDistinctWaves();
   }
 
-  @GetMapping("/frontend/peers")
+  @GetMapping({"/frontend/peers", "/backend/peers"})
   ResponseEntity<PeerDataPaginatedDTO> getPeers(@RequestParam(defaultValue = "login") String orderBy,
                                                 @RequestParam(defaultValue = "true") boolean orderAscending,
                                                 @RequestParam(defaultValue = "30") int peersPerPage,
@@ -108,7 +108,7 @@ public class FrontendController {
       peerData.hasNext() ? String.format(formatString, peerData.getTotalPages() - 1) : null
       ), headers, HttpStatus.OK);
   }
-  @DeleteMapping("/frontend/peers")
+  @DeleteMapping({"/frontend/peers", "/backend/peers"})
   void deletePeer(@RequestParam String peerLogin) {
     peerRepo.deleteById(
       peerRepo
@@ -116,7 +116,7 @@ public class FrontendController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Peer with login " + peerLogin + " was not found"))
         .id());
   }
-  @PutMapping("/frontend/peers")
+  @PutMapping({"/frontend/peers", "/backend/peers"})
   void putPeers(@RequestBody PeerDataDTOList peerDataDTOs) {
     if (peerDataDTOs.peers() != null) {
       for (var peerDataDTO: peerDataDTOs.peers()) {

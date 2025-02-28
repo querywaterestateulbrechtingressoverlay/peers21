@@ -1,4 +1,4 @@
-package ru.cyphercola.peers21.webscraper.datalayerdto;
+package ru.cyphercola.peers21.webscraper.dto.internal;
 
 public record PeerDataDTO(
   String login,

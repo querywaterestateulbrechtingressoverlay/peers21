@@ -1,4 +1,4 @@
-package ru.cyphercola.peers21.webscraper.dto;
+package ru.cyphercola.peers21.webscraper.dto.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

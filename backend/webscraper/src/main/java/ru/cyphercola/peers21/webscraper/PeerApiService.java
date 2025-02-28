@@ -1,14 +1,13 @@
 package ru.cyphercola.peers21.webscraper;
 
-import ru.cyphercola.peers21.webscraper.datalayerdto.*;
-import ru.cyphercola.peers21.webscraper.dto.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import ru.cyphercola.peers21.webscraper.dto.external.*;
+import ru.cyphercola.peers21.webscraper.dto.internal.*;
 
 import java.util.*;
 
@@ -65,7 +64,7 @@ public class PeerApiService {
     logger.trace("ykt campus id = {}", yktId);
     List<TribeDataDTO> tribes = getTribes(yktId);
     logger.info("transferring tribe list to data layer...");
-    intApiRequestService.put(new TribeDataDTOList(tribes), "/tribes");
+    intApiRequestService.put(new TribeDataDTOList(tribes), "/backend/tribes");
 
     var peerTribes = new HashMap<String, Integer>();
     for (var tribe : tribes) {
@@ -95,7 +94,7 @@ public class PeerApiService {
         logger.trace("peer {} is inactive, skipping", peerLoginAndTribe.getKey());
       }
     }
-    intApiRequestService.put(new PeerDataDTOList(peers), "/peers");
+    intApiRequestService.put(new PeerDataDTOList(peers), "/backend/peers");
     logger.info("application initialized");
   }
 
@@ -121,7 +120,7 @@ public class PeerApiService {
   public void updatePeerList() {
     logger.info("updating peer info...");
     int page = 0;
-    String apiUrl = "/peers?page=%d";
+    String apiUrl = "/backend/peers?page=%d";
     PeerDataPaginatedDTO peerList;
     var changedPeerData = new ArrayList<PeerDataDTO>();
     do {
@@ -130,7 +129,7 @@ public class PeerApiService {
         changedPeerData.add(updatePeer(peer));
       }
     } while (peerList.nextPageUrl() != null);
-    intApiRequestService.put(new PeerDataDTOList(changedPeerData), "/peers");
+    intApiRequestService.put(new PeerDataDTOList(changedPeerData), "/backend/peers");
     logger.info("update finished, updated {} peers", changedPeerData.size());
   }
 }

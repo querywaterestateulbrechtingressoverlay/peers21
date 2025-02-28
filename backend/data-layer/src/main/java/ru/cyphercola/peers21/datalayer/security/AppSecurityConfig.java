@@ -55,7 +55,7 @@ public class AppSecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(
             (auth) -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll())
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").authenticated())
         .httpBasic(Customizer.withDefaults())
         .build();
   }
