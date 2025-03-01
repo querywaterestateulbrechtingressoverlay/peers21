@@ -32,11 +32,10 @@ public class ExternalApiRequestService {
   private long keyExpiryDate;
   private RestClient apiClient;
 
-  @Autowired
   private RestClient.Builder restClientBuilder;
 
   @Autowired
-  ExternalApiRequestService(ExternalApiRequestServiceProperties properties) {
+  ExternalApiRequestService(RestClient.Builder rcb, ExternalApiRequestServiceProperties properties) {
     this.tokenEndpointUrl = properties.tokenEndpointUrl();
     tokenRequestBody.add("username", properties.apiUsername());
     tokenRequestBody.add("password", properties.apiPassword());
@@ -49,6 +48,7 @@ public class ExternalApiRequestService {
       .build();
     apiBaseUrl = properties.apiBaseUrl();
     keyExpiryDate = System.currentTimeMillis() - 1;
+    restClientBuilder = rcb;
     apiClient = restClientBuilder.build();
   }
   public void updateApiKey() {

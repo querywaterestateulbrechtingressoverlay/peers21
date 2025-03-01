@@ -44,7 +44,7 @@ public class InternalApiRequestService {
 
   void updateAuthToken() {
     if (tokenExpiryTimestamp.isBefore(Instant.now())) {
-      logger.debug("data layer token has expired, updating...");
+      logger.info("data layer token has expired, updating...");
       JWTokenDTO tokenResponse = tokenClient.post()
           .uri(apiBaseUrl + "/auth/login")
           .retrieve()
@@ -53,7 +53,7 @@ public class InternalApiRequestService {
       apiClient = apiClient.mutate()
           .defaultHeader("Authorization", "Bearer " + tokenResponse.token())
           .build();
-      logger.debug("token update successful, new token = {}, expires at {}", tokenResponse.token(), tokenExpiryTimestamp.toString());
+      logger.info("token update successful, new token = {}, expires at {}", tokenResponse.token(), tokenExpiryTimestamp.toString());
     }
   }
 
