@@ -29,17 +29,11 @@ public class ExternalApiRequestService {
   private final Bucket reqBucket;
   private final Logger logger = LoggerFactory.getLogger(ExternalApiRequestService.class);
   private final LinkedMultiValueMap<String, String> tokenRequestBody = new LinkedMultiValueMap<>();
-  private long keyExpiryDate = System.currentTimeMillis();
+  private long keyExpiryDate;
   private RestClient apiClient;
 
   @Autowired
   private RestClient.Builder restClientBuilder;
-
-  void rebuildClient() {
-    if (apiClient == null) {
-      apiClient = restClientBuilder.build();
-    }
-  }
 
   @Autowired
   ExternalApiRequestService(ExternalApiRequestServiceProperties properties) {
@@ -54,6 +48,8 @@ public class ExternalApiRequestService {
         .refillGreedy(properties.rateLimit(), Duration.ofSeconds(1)))
       .build();
     apiBaseUrl = properties.apiBaseUrl();
+    keyExpiryDate = System.currentTimeMillis() - 1;
+    apiClient = restClientBuilder.build();
   }
   public void updateApiKey() {
     if (System.currentTimeMillis() >= keyExpiryDate) {
@@ -76,7 +72,6 @@ public class ExternalApiRequestService {
             )
         )
           .body(ApiKeyResponse.class);
-      rebuildClient();
       keyExpiryDate = System.currentTimeMillis() + keyEntity.expiresIn() * 1000L;
       logger.info("successfully updated API key, new key expiry date = {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(keyExpiryDate), TimeZone.getDefault().toZoneId()));
       apiClient = apiClient.mutate().defaultHeader("Authorization", "Bearer " + keyEntity.accessToken()).build();
@@ -84,7 +79,6 @@ public class ExternalApiRequestService {
   }
   public <T> T get(Class<T> responseClass, String apiUrl) {
     updateApiKey();
-    rebuildClient();
     T result;
     while (true) {
       if (reqBucket.tryConsume(1)) {

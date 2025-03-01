@@ -19,6 +19,8 @@ import ru.cyphercola.peers21.datalayer.data.mock.MockPeerDataRepository;
 import ru.cyphercola.peers21.datalayer.data.mock.MockTribeDataRepository;
 import ru.cyphercola.peers21.datalayer.dto.*;
 
+
+// TODO: clean up and add logging
 @RestController
 @CrossOrigin
 @RequestMapping("api")
@@ -68,6 +70,7 @@ public class Controller {
     return peerRepo.findDistinctWaves();
   }
 
+// TODO: Spring HATEOAS? cleanup
   @GetMapping({"/frontend/peers", "/backend/peers"})
   ResponseEntity<PeerDataPaginatedDTO> getPeers(@RequestParam(defaultValue = "login") String orderBy,
                                                 @RequestParam(defaultValue = "true") boolean orderAscending,

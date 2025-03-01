@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @RestController
 public class SecurityController {
   private final Logger logger = LoggerFactory.getLogger(SecurityController.class);
+//  TODO: read expiry from env variables
   private final long expirySeconds = 360000L;
 
   @Autowired

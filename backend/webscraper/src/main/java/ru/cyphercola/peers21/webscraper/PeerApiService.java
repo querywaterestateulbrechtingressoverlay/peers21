@@ -38,12 +38,12 @@ public class PeerApiService {
     List<String> participantLoginList = new ArrayList<>();
     int page = 0;
     while (true) {
-    logger.trace("page {}", page);
       ParticipantLoginsDTO participantLogins = extApiRequestService
           .get(ParticipantLoginsDTO.class, "/coalitions/" + tribe.id() + "/participants?limit=50&offset=" + 50 * page++);
       if (participantLogins.participants().isEmpty()) {
         break;
       } else {
+        logger.trace("page {}", page);
         participantLoginList.addAll(participantLogins.participants());
       }
     }
@@ -55,20 +55,19 @@ public class PeerApiService {
     return peers;
   }
 
+  // TODO: decompose ?
   public void initPeerList() {
     String yktId = extApiRequestService.get(CampusesDTO.class, "/campuses").campuses().stream()
         .filter(campus -> campus.shortName().equals("21 Yakutsk"))
         .findFirst()
         .orElseThrow(() -> new RuntimeException("couldn't find a campus with specified ID"))
         .id();
-    logger.trace("ykt campus id = {}", yktId);
     List<TribeDataDTO> tribes = getTribes(yktId);
     logger.info("transferring tribe list to data layer...");
     intApiRequestService.put(new TribeDataDTOList(tribes), "/backend/tribes");
 
     var peerTribes = new HashMap<String, Integer>();
     for (var tribe : tribes) {
-
       peerTribes.putAll(getTribeParticipantLogins(tribe));
     }
     var peers = new ArrayList<PeerDataDTO>();
@@ -116,6 +115,8 @@ public class PeerApiService {
     );
   }
 
+
+  // TODO: configure update rate with env variables
   @Scheduled(fixedRateString = "PT15M")
   public void updatePeerList() {
     logger.info("updating peer info...");

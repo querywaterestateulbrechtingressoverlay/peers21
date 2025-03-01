@@ -44,7 +44,7 @@ public class InternalApiRequestService {
 
   void updateAuthToken() {
     if (tokenExpiryTimestamp.isBefore(Instant.now())) {
-      logger.info("data layer token has expired, updating...");
+      logger.debug("data layer token has expired, updating...");
       JWTokenDTO tokenResponse = tokenClient.post()
           .uri(apiBaseUrl + "/auth/login")
           .retrieve()
@@ -53,14 +53,14 @@ public class InternalApiRequestService {
       apiClient = apiClient.mutate()
           .defaultHeader("Authorization", "Bearer " + tokenResponse.token())
           .build();
-      logger.info("token update successful, new token = {}, expires at {}", tokenResponse.token(), tokenExpiryTimestamp.toString());
+      logger.debug("token update successful, new token = {}, expires at {}", tokenResponse.token(), tokenExpiryTimestamp.toString());
     }
   }
 
   public <T> T get(Class<T> responseClass, String apiUrl) {
     updateAuthToken();
     try {
-      logger.info("GET request to internal API {}", apiBaseUrl + apiUrl);
+      logger.debug("GET request to internal API {}", apiBaseUrl + apiUrl);
       T result;
       RetryTemplate template = RetryTemplate.builder()
         .maxAttempts(10)
@@ -85,7 +85,7 @@ public class InternalApiRequestService {
   public <U> void put(U requestBody, String apiUrl) {
     updateAuthToken();
     try {
-      logger.info("PUT request to internal API {}", apiBaseUrl + apiUrl);
+      logger.debug("PUT request to internal API {}", apiBaseUrl + apiUrl);
       var asd = apiClient.put()
         .uri(apiBaseUrl + apiUrl)
         .body(requestBody)

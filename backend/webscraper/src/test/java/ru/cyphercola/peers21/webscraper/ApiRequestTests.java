@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.util.LinkedMultiValueMap;
@@ -25,21 +26,17 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @SpringBootTest(classes = {ExternalApiRequestService.class})
+@TestPropertySource("classpath:test.properties")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ApiRequestTests {
 	@Autowired
 	ExternalApiRequestService requestService;
-	@TestBean
-	private ExternalApiRequestServiceProperties properties;
-	static ExternalApiRequestServiceProperties properties() {
-		return new ExternalApiRequestServiceProperties(
-			"http://localhost/remote-api-base-url",
-			"http://localhost/remote-api-token-endpoint",
-			"API_USERNAME",
-			"API_PASSWORD",
-			3);
-	}
+	@Autowired
+	ExternalApiRequestServiceProperties extProperties;
+	@Autowired
+	ExternalApiRequestServiceProperties intProperties;
+
 	@TestBean
 	private RestClient.Builder apiReqClientBuilder;
 	static RestClient.Builder apiReqClientBuilder() {
@@ -65,11 +62,11 @@ public class ApiRequestTests {
 	void testApiTokenRequest() throws URISyntaxException, JsonProcessingException {
 		var expectedPostRequest = new LinkedMultiValueMap<String, String>();
 		expectedPostRequest.add("client_id", "s21-open-api");
-		expectedPostRequest.add("username", properties.apiUsername());
-		expectedPostRequest.add("password", properties.apiPassword());
+		expectedPostRequest.add("username", extProperties.apiUsername());
+		expectedPostRequest.add("password", extProperties.apiPassword());
 		expectedPostRequest.add("grant_type", "password");
 		mockServer
-			.expect(requestTo(new URI(properties.tokenEndpointUrl())))
+			.expect(requestTo(new URI(extProperties.tokenEndpointUrl())))
 			.andExpect(method(HttpMethod.POST))
 			.andExpect(header("Content-Type", "application/x-www-form-urlencoded"))
 			.andExpect(content().formData(expectedPostRequest))
@@ -81,18 +78,18 @@ public class ApiRequestTests {
 	void testSimpleApiRequest() throws JsonProcessingException, URISyntaxException {
 		MultiValueMap<String, String> expectedPostRequest = new LinkedMultiValueMap<>();
 		expectedPostRequest.add("client_id", "s21-open-api");
-    expectedPostRequest.add("username", properties.apiUsername());
-    expectedPostRequest.add("password", properties.apiPassword());
+    expectedPostRequest.add("username", extProperties.apiUsername());
+    expectedPostRequest.add("password", extProperties.apiPassword());
 		expectedPostRequest.add("grant_type", "password");
 		CampusDTO testResponse = new CampusDTO("cool-id", "ykt", "yakutsk");
 		mockServer
-			.expect(requestTo(new URI(properties.tokenEndpointUrl())))
+			.expect(requestTo(new URI(extProperties.tokenEndpointUrl())))
 			.andExpect(method(HttpMethod.POST))
 			.andExpect(header("Content-Type", "application/x-www-form-urlencoded"))
 			.andExpect(content().formData(expectedPostRequest))
 			.andRespond(withSuccess(objMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
 		mockServer
-			.expect(requestTo(new URI(properties.apiBaseUrl() + "/campus")))
+			.expect(requestTo(new URI(extProperties.apiBaseUrl() + "/campus")))
 			.andRespond(withSuccess(objMapper.writeValueAsString(testResponse), MediaType.APPLICATION_JSON));
 		requestService.get(CampusDTO.class, "/campus");
 		mockServer.verify();
