@@ -3,15 +3,8 @@ package ru.cyphercola.peers21.datalayer.security;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.core.log.LogMessage;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import ru.cyphercola.peers21.datalayer.data.*;
@@ -27,7 +20,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
-@EnableConfigurationProperties(InitialApiUserCredentials.class)
+@EnableConfigurationProperties(SecurityProperties.class)
 public class CustomUserDetailsService implements UserDetailsManager, InitializingBean {
   private final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
   @Autowired
@@ -37,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
   @Autowired
   private ApiUserAuthorityRepository authorityRepository;
   @Autowired
-  private InitialApiUserCredentials initialCredentials;
+  private SecurityProperties securityProperties;
 
   private final PasswordEncoder encoder  = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
@@ -117,9 +110,9 @@ public class CustomUserDetailsService implements UserDetailsManager, Initializin
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    if (!userExists(initialCredentials.username())) {
-      logger.info("creating a initial user {} with password {}", initialCredentials.username(), initialCredentials.password());
-      createUser(new User(initialCredentials.username(), initialCredentials.password(), List.of(new SimpleGrantedAuthority("api"), new SimpleGrantedAuthority("admin"), new SimpleGrantedAuthority("user"))));
+    if (!userExists(securityProperties.apiUsername())) {
+      logger.info("creating a initial user {} with password {}", securityProperties.apiUsername(), securityProperties.apiPassword());
+      createUser(new User(securityProperties.apiUsername(), securityProperties.apiPassword(), List.of(new SimpleGrantedAuthority("api"), new SimpleGrantedAuthority("admin"), new SimpleGrantedAuthority("user"))));
     }
   }
 }

@@ -1,9 +1,8 @@
-INSERT INTO api_users (login, password) VALUES  ('admin', 'adminpassword');
-INSERT INTO api_users (login, password) VALUES ('user', 'userpassword');
+INSERT INTO api_users (login, password) VALUES  ('test_user_1', 'password');
+INSERT INTO api_users (login, password) VALUES ('test_user_2', 'password');
 
-INSERT INTO api_user_authorities (api_user_login, authority) VALUES ('user', 'USER');
-INSERT INTO api_user_authorities (api_user_login, authority) VALUES ('admin', 'USER');
-INSERT INTO api_user_authorities (api_user_login, authority) VALUES ('admin', 'ADMIN');
+INSERT INTO api_user_authorities (api_user_login, authority) VALUES ('test_user_1', 'api');
+INSERT INTO api_user_authorities (api_user_login, authority) VALUES ('test_user_2', 'user');
 
 INSERT INTO tribe_data (tribe_id, name) VALUES (123, 'amogi');
 INSERT INTO tribe_data (tribe_id, name) VALUES (321, 'abobi');

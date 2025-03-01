@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS api_users(
 );
 CREATE TABLE IF NOT EXISTS api_user_authorities(
     id SERIAL PRIMARY KEY,
-    user_id INT,
+    api_user_login VARCHAR(255),
     authority VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES api_users (id)
+    FOREIGN KEY (api_user_login) REFERENCES api_users (login),
+    UNIQUE (api_user_login, authority)
 )

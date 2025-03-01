@@ -3,6 +3,8 @@ package ru.cyphercola.peers21.datalayer;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import ru.cyphercola.peers21.datalayer.dto.*;
 @CrossOrigin
 @RequestMapping("api")
 public class Controller {
+  Logger logger = LoggerFactory.getLogger(Controller.class);
   @Autowired
   TribeDataRepository tribeRepo;
   @Autowired

@@ -31,7 +31,6 @@ public class SecurityController {
       .stream()
       .map(GrantedAuthority::getAuthority)
       .collect(Collectors.joining(" "));
-    logger.info(scope);
     Instant now = Instant.now();
     Instant expiryInstant = now.plusSeconds(expirySeconds);
     JwtClaimsSet claims = JwtClaimsSet.builder()
